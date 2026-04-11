@@ -11,6 +11,9 @@ const geistSans = Geist({
 export const metadata: Metadata = {
   title: "GA4 Explainer — Plain-English GA4 Reports for Agencies",
   description: "Connect your GA4 property, get a plain-English performance report in seconds. Built for digital agencies.",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
