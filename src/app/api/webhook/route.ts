@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 import crypto from 'crypto';
 
 export async function POST(req: Request) {
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     if (customerEmail) {
       console.log(`Upgrading user ${customerEmail} to PRO`);
       
-      const { error } = await supabase
+      const { error } = await supabaseAdmin
         .from('users')
         .update({ 
           is_pro: true,
