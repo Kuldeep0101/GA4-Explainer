@@ -114,7 +114,7 @@ export async function GET(request: Request) {
         dimensions: [{ name: 'pageTitle' }, { name: 'pagePath' }],
         metrics: [{ name: 'screenPageViews' }],
         orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
-        limit: 5n,
+        limit: 5,
       }),
       // Traffic channels
       analyticsDataClient.runReport({
@@ -137,7 +137,7 @@ export async function GET(request: Request) {
         dimensions: [{ name: 'country' }],
         metrics: [{ name: 'totalUsers' }],
         orderBys: [{ metric: { metricName: 'totalUsers' }, desc: true }],
-        limit: 3n,
+        limit: 3,
       }),
       // Conversions by event
       analyticsDataClient.runReport({
@@ -146,13 +146,13 @@ export async function GET(request: Request) {
         dimensions: [{ name: 'eventName' }],
         metrics: [{ name: 'conversions' }],
         orderBys: [{ metric: { metricName: 'conversions' }, desc: true }],
-        limit: 5n,
+        limit: 5,
       }),
     ]);
 
     // Parse main metrics
     const mainRow = mainResponse.rows?.[0];
-    const m = mainRow?.metricValues || [];
+    const m = (mainRow?.metricValues as any[]) || [];
     const totalUsers = m[0]?.value || '0';
     const newUsers = m[1]?.value || '0';
     const sessions = m[2]?.value || '0';

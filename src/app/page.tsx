@@ -30,7 +30,8 @@ export default function Dashboard() {
     if (!session?.user?.email) return;
 
     const syncUserAndClients = async () => {
-      const email = session.user.email!;
+      const email = session?.user?.email;
+      if (!email) return;
       
       // 1. Sync User / Verify Pro Status
       let { data: userRow } = await supabase.from('users').select('*').eq('email', email).single();
