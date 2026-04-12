@@ -104,7 +104,7 @@ export default function Dashboard() {
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: 'pdt_0NcTVt2g8EfF2cmdi0ots' }) // Placeholder, update later
+        body: JSON.stringify({}) // Pulled dynamically on the secure backend
       });
       const data = await res.json();
       if (data.url) {

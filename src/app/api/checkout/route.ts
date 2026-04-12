@@ -15,10 +15,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing DODO_API_KEY' }, { status: 500 });
     }
 
-    const { productId } = await request.json();
-
-    // Use the official domain. Try test.dodopayments.com or live.dodopayments.com
-    const response = await fetch("https://test.dodopayments.com/subscriptions", {
+    // We are migrating this to the live domain endpoint
+    const response = await fetch("https://live.dodopayments.com/subscriptions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${DODO_API_KEY}`,
@@ -32,7 +30,7 @@ export async function POST(request: Request) {
           email: userEmail,
           name: session?.user?.name || 'Valued Customer'
         },
-        product_id: productId, // Usually passed from env or client
+        product_id: process.env.DODO_PRODUCT_ID, // Pulled securely from Live Server Env Var
         quantity: 1, // Required by Dodo API
         payment_link: true,
         return_url: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/?success=true`
