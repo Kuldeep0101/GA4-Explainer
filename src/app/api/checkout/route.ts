@@ -15,6 +15,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing DODO_API_KEY' }, { status: 500 });
     }
 
+    // Geofenced Pricing Interceptor
+    const rawCountryHeader = request.headers.get('x-vercel-ip-country');
+    const userCountry = rawCountryHeader || 'US'; // Localhost fallback
+
+    const targetProductId = userCountry === 'IN' ? 'pdt_0NcYZ7nvAfhkKG2gpttPH' : 'pdt_0NcXgPRMt88V7bpkC3m7W';
+
     // We are migrating this to the live domain endpoint
     const response = await fetch("https://live.dodopayments.com/subscriptions", {
       method: "POST",
@@ -24,13 +30,13 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         billing: {
-          country: "IN" // Dodo strictly requires a billing field. Setting to India defaults the checkout to show UPI. Users from other countries can toggle their region on the checkout page.
+          country: userCountry // Dodo forces strict mapping. Auto-geofences UPI to 'IN' vs ApplePay to 'US/EU'
         },
         customer: {
           email: userEmail,
           name: session?.user?.name || 'Valued Customer'
         },
-        product_id: process.env.DODO_PRODUCT_ID, // Pulled securely from Live Server Env Var
+        product_id: targetProductId, // Silently swaps price depending on IP trace
         quantity: 1, // Required by Dodo API
         payment_link: true,
         return_url: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/?success=true`
