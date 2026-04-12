@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { Providers } from "./providers";
 
@@ -23,6 +24,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={geistSans.variable}>
+      <head>
+        {/* ParityDeals dynamic UI location tracker */}
+        <Script src="https://cdn.paritydeals.com/banner.js" strategy="afterInteractive" />
+      </head>
       <body>
         <Providers>{children}</Providers>
       </body>
