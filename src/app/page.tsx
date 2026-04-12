@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Plus, FileText, X, Users, TrendingUp, Zap, LogOut, LogIn, CheckCircle } from 'lucide-react';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { supabase } from '@/lib/supabase';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import styles from './page.module.css';
 
 interface Client {
@@ -285,6 +286,7 @@ export default function Dashboard() {
               title={session.user.email || ''}
             />
           )}
+          <ThemeToggle />
           <button className="btn-secondary" onClick={() => signOut()} title="Sign out" style={{ padding: '8px 14px', fontSize: '13px' }}>
             <LogOut size={15} /> Sign out
           </button>

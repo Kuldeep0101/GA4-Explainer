@@ -12,7 +12,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light) {
     --background: #0a0a0a;
     --foreground: #ededed;
     --primary: #7466f2;
@@ -23,6 +23,18 @@
     --muted: #a1a1aa;
     --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   }
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --primary: #7466f2;
+  --primary-hover: #8f84f7;
+  --secondary: #27272a;
+  --border: #27272a;
+  --card-bg: #18181b;
+  --muted: #a1a1aa;
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 html,
