@@ -1,3 +1,5 @@
+export const runtime = 'edge'; // Bypasses Vercel's 10s serverless timeout
+
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 import { SYSTEM_PROMPT, buildUserPrompt, GA4ReportData, ParsedReport } from '@/lib/prompts';
@@ -50,7 +52,7 @@ async function getAIGeneratedSummary(simplifiedData: any, clientName: string) {
 
   console.log('--- GEMINI REQUEST START ---');
   console.log('Sending optimized data for:', clientName);
-  
+
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3.1-flash-lite-preview',
@@ -64,21 +66,19 @@ async function getAIGeneratedSummary(simplifiedData: any, clientName: string) {
 
     const rawText = response.text || '';
     console.log('Gemini 3.1 Lite response length:', rawText.length);
-    return rawText;
+    return { text: rawText, model: 'gemini-3.1-flash-lite-preview' };
   } catch (error: any) {
     const errorMsg = error.message || '';
     const isRetryable = errorMsg.includes('503') || errorMsg.includes('429');
-    
+
     if (isRetryable) {
       console.warn('Primary model (gemini-3.1-flash-lite-preview) failed (503/429). Waiting 1 second before falling back to gemini-2.5-flash.', error.message);
     } else {
       console.warn('Primary model failed with unexpected error. Attempting fallback anyway.', error.message);
     }
-    
-    // Add 1 second delay to handle momentary blips
-    await delay(1000);
 
-    // Fallback to stable model explicitly stripping out thinkingConfig
+    await delay(2000);
+
     const fallbackResponse = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: combinedPrompt,
@@ -89,7 +89,7 @@ async function getAIGeneratedSummary(simplifiedData: any, clientName: string) {
 
     const rawFallbackText = fallbackResponse.text || '';
     console.log('Gemini 2.5 Fallback response length:', rawFallbackText.length);
-    return rawFallbackText;
+    return { text: rawFallbackText, model: 'gemini-2.5-flash' };
   }
 }
 
@@ -124,15 +124,15 @@ export async function POST(request: Request) {
     const simplifiedData = simplifyGA4Data(stats);
 
     // Call abstraction function
-    const rawText = await getAIGeneratedSummary(simplifiedData, clientName);
+    const aiResponse = await getAIGeneratedSummary(simplifiedData, clientName);
 
     // Parse JSON — strip accidental markdown fences if present
     let report: ParsedReport;
     try {
-      const clean = rawText.replace(/```json|```/g, '').trim();
+      const clean = aiResponse.text.replace(/```json|```/g, '').trim();
       report = JSON.parse(clean);
     } catch (parseError) {
-      console.error('JSON Parse Error. Raw Text:', rawText);
+      console.error('JSON Parse Error. Raw Text:', aiResponse.text);
       throw new Error('AI returned invalid JSON format');
     }
 
@@ -141,8 +141,8 @@ export async function POST(request: Request) {
       report.report_date_range = `${startDate} to ${endDate}`;
     }
 
-    console.log('--- GEMINI REQUEST SUCCESS ---');
-    return NextResponse.json({ report });
+    console.log(`--- SUCCESS: Model Used -> ${aiResponse.model} ---`);
+    return NextResponse.json({ report, model: aiResponse.model });
 
   } catch (error: any) {
     console.error('Report Generation Error:', error);

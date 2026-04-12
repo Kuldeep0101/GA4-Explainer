@@ -67,6 +67,10 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
 
       if (aiJson.error) throw new Error(aiJson.error);
 
+      // Successfully log the specific AI model used in the browser console
+      console.log(`✅ Report Generated Successfully!`);
+      console.log(`🤖 Model Engine Used: ${aiJson.model}`);
+
       setReportData({
         clientName,
         propertyId,
