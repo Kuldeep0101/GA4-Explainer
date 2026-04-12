@@ -64,6 +64,4 @@ export async function POST(req: Request) {
 
   console.log('--- DODO WEBHOOK END ---');
   return NextResponse.json({ received: true });
-
-  return NextResponse.json({ received: true });
 }
