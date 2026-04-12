@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     // Strip out the data URI prefix if present
     const base64Content = pdfBase64.replace(/^data:application\/pdf;base64,/, '');
 
-    const data = await resend.emails.send({
+    const result = await resend.emails.send({
       from: process.env.FROM_EMAIL || 'GA4 Explainer <onboarding@resend.dev>', // MUST use a verified domain in Resend
       replyTo: senderEmail, // So clients can securely reply directly to the agency!
       to: [email],
@@ -32,7 +32,14 @@ export async function POST(req: Request) {
       ],
     });
 
-    return NextResponse.json({ success: true, data });
+    // Resend SDK does not throw exceptions for 403/Validation errors, it returns them in the payload.
+    // We must manually reject them so the Frontend Toast shows the Red Error UI.
+    if (result.error) {
+      console.error('Resend API Error:', result.error);
+      return NextResponse.json({ error: result.error.message }, { status: result.error.statusCode || 400 });
+    }
+
+    return NextResponse.json({ success: true, data: result.data });
   } catch (error: any) {
     console.error('Email sending error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
