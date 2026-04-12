@@ -4,7 +4,6 @@ import crypto from 'crypto';
 
 export async function POST(req: Request) {
   const body = await req.text();
-  const webhookSecret = process.env.DODO_WEBHOOK_SECRET || '';
 
   console.log('--- DODO WEBHOOK START ---');
   
@@ -16,27 +15,34 @@ export async function POST(req: Request) {
   console.log('All Headers Received:', JSON.stringify(headersObj, null, 2));
 
   // Try multiple common signature header names
-  const signature = req.headers.get('x-dodo-signature') ?? 
-                    req.headers.get('dodo-signature') ?? 
-                    req.headers.get('x-signature') ?? 
-                    '';
+  const signature = req.headers.get('webhook-signature') || req.headers.get('x-dodo-signature') || '';
+  const timestamp = req.headers.get('webhook-timestamp') || '';
+  const msgId = req.headers.get('webhook-id') || '';
+  const webhookSecret = process.env.DODO_WEBHOOK_SECRET || '';
 
-  console.log('Found Signature Header:', signature);
-  console.log('Webhook Secret Exists:', !!webhookSecret);
+  console.log('Found Signature:', signature);
+  console.log('Found Timestamp:', timestamp);
+  console.log('Found MsgId:', msgId);
 
-  // 1. Verify Signature (Security)
-  if (!webhookSecret || !signature) {
-    console.error('Webhook Error: Missing secret or signature');
+  // 1. Verify Signature (Svix/Dodo standard)
+  if (!webhookSecret || !signature || !timestamp || !msgId) {
+    console.error('Webhook Error: Missing secret, signature, timestamp, or msgId');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const hmac = crypto.createHmac('sha256', webhookSecret);
-  const digest = hmac.update(body).digest('hex');
+  // Svix signature format: v1,base64_hash
+  const signedPayload = `${msgId}.${timestamp}.${body}`;
+  const secretBytes = webhookSecret.split('_')[1] || webhookSecret; // Handle 'whsec_' prefix if present
+  
+  const hmac = crypto.createHmac('sha256', secretBytes);
+  const calculatedSignature = hmac.update(signedPayload).digest('base64');
+  
+  const expectedSignature = signature.split(',')[1]; // Get the part after 'v1,'
 
-  if (digest !== signature) {
-    console.error('Webhook Error: Invalid signature.');
-    console.error('Calculated Digest:', digest);
-    console.error('Received Signature:', signature);
+  if (calculatedSignature !== expectedSignature) {
+    console.error('Webhook Error: Invalid Svix signature.');
+    console.error('Calculated:', calculatedSignature);
+    console.error('Expected:', expectedSignature);
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
   }
 
