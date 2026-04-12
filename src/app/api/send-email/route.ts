@@ -19,9 +19,8 @@ export async function POST(req: Request) {
     const base64Content = pdfBase64.replace(/^data:application\/pdf;base64,/, '');
 
     const data = await resend.emails.send({
-      // from: 'GA4 Explainer <onboarding@resend.dev>',
-      from: senderEmail || 'GA4 Explainer <onboarding@resend.dev>', // Dynamically updated as per the logged-in user
-      replyTo: senderEmail, // Corrected from reply_to
+      from: process.env.FROM_EMAIL || 'GA4 Explainer <onboarding@resend.dev>', // MUST use a verified domain in Resend
+      replyTo: senderEmail, // So clients can securely reply directly to the agency!
       to: [email],
       subject: `${clientName} - Plain-English GA4 Report`,
       text: `Hello,\n\nPlease find attached the latest website performance report for ${clientName}.\n\nBest regards,\nYour Agency`,
