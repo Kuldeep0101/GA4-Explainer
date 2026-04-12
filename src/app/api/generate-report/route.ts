@@ -40,11 +40,12 @@ function simplifyGA4Data(rawStats: any) {
   };
 }
 
+// Helper sleep function
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 async function getAIGeneratedSummary(simplifiedData: any, clientName: string) {
   const userPrompt = `Client: ${clientName}\nFlat Data (JSON): ${JSON.stringify(simplifiedData)}`;
-
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
-
   const combinedPrompt = `${SYSTEM_PROMPT}\n\nUser Data:\n${userPrompt}\n\nIMPORTANT: Return ONLY a raw JSON object. Do not wrap it in markdown block quotes (\`\`\`). NEVER use raw unescaped newlines inside JSON strings (use \\n instead).`;
 
   console.log('--- GEMINI REQUEST START ---');
@@ -52,24 +53,34 @@ async function getAIGeneratedSummary(simplifiedData: any, clientName: string) {
   
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-3.1-flash-lite-preview',
       contents: combinedPrompt,
       config: {
         temperature: 0.3,
-        // @ts-ignore - bypassing TS to match requested experimental config flag
+        // @ts-ignore
         thinkingConfig: { thinking_level: 'low' }
       }
     });
 
     const rawText = response.text || '';
-    console.log('Gemini 3 response length:', rawText.length);
+    console.log('Gemini 3.1 Lite response length:', rawText.length);
     return rawText;
   } catch (error: any) {
-    console.warn('Primary model (gemini-3-flash-preview) failed or is overloaded. Falling back to stable gemini-1.5-flash.', error.message);
+    const errorMsg = error.message || '';
+    const isRetryable = errorMsg.includes('503') || errorMsg.includes('429');
     
-    // Fallback to stable model without experimental thinking config
+    if (isRetryable) {
+      console.warn('Primary model (gemini-3.1-flash-lite-preview) failed (503/429). Waiting 1 second before falling back to gemini-2.5-flash.', error.message);
+    } else {
+      console.warn('Primary model failed with unexpected error. Attempting fallback anyway.', error.message);
+    }
+    
+    // Add 1 second delay to handle momentary blips
+    await delay(1000);
+
+    // Fallback to stable model explicitly stripping out thinkingConfig
     const fallbackResponse = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       contents: combinedPrompt,
       config: {
         temperature: 0.3,
@@ -77,7 +88,7 @@ async function getAIGeneratedSummary(simplifiedData: any, clientName: string) {
     });
 
     const rawFallbackText = fallbackResponse.text || '';
-    console.log('Gemini 1.5 Fallback response length:', rawFallbackText.length);
+    console.log('Gemini 2.5 Fallback response length:', rawFallbackText.length);
     return rawFallbackText;
   }
 }
