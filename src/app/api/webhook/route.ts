@@ -4,11 +4,24 @@ import crypto from 'crypto';
 
 export async function POST(req: Request) {
   const body = await req.text();
-  const signature = req.headers.get('x-dodo-signature');
-  const webhookSecret = process.env.DODO_WEBHOOK_SECRET;
+  const webhookSecret = process.env.DODO_WEBHOOK_SECRET || '';
 
   console.log('--- DODO WEBHOOK START ---');
-  console.log('Signature Header:', signature);
+  
+  // Header Spy: Log all incoming headers to find the signature key
+  const headersObj: Record<string, string> = {};
+  req.headers.forEach((value, key) => {
+    headersObj[key] = value;
+  });
+  console.log('All Headers Received:', JSON.stringify(headersObj, null, 2));
+
+  // Try multiple common signature header names
+  const signature = req.headers.get('x-dodo-signature') ?? 
+                    req.headers.get('dodo-signature') ?? 
+                    req.headers.get('x-signature') ?? 
+                    '';
+
+  console.log('Found Signature Header:', signature);
   console.log('Webhook Secret Exists:', !!webhookSecret);
 
   // 1. Verify Signature (Security)
@@ -34,10 +47,10 @@ export async function POST(req: Request) {
 
   // 3. Handle Events
   // Dodo sends various events like 'subscription.created', 'order.succeeded', etc.
-  if (event.type.includes('subscription') || event.type.includes('order') || event.type.includes('payment')) {
+  if (event && event.type && (event.type.includes('subscription') || event.type.includes('order') || event.type.includes('payment'))) {
     const data = event.data;
     // Try to find email in multiple common locations
-    const customerEmail = data?.customer?.email || data?.email || event.customer_email;
+    const customerEmail = data?.customer?.email || data?.email || event.customer_email || event.data?.email;
     const customerId = data?.customer?.id || data?.customer_id;
 
     if (customerEmail) {
