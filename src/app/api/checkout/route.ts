@@ -23,7 +23,9 @@ export async function POST(request: Request) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        // Removed hardcoded billing country so Dodo geolocates the user automatically for UPI
+        billing: {
+          country: "IN" // Dodo strictly requires a billing field. Setting to India defaults the checkout to show UPI. Users from other countries can toggle their region on the checkout page.
+        },
         customer: {
           email: userEmail,
           name: session?.user?.name || 'Valued Customer'
