@@ -325,8 +325,14 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: #F8F8F6; /* Fix 1: Light gray bg so white card pops with contrast */
+  background: #F8F8F6;
   background-image: radial-gradient(circle at 1px 1px, #dadad8 1px, transparent 0);
+  background-size: 32px 32px;
+}
+
+:global(.dark) .signInPage {
+  background: #0a0a0a;
+  background-image: radial-gradient(circle at 1px 1px, #27272a 1px, transparent 0);
   background-size: 32px 32px;
 }
 
@@ -390,11 +396,9 @@
   padding: 18px 20px;
 }
 
-@media (prefers-color-scheme: dark) {
-  .signInFeatures {
-    background: var(--secondary);
-    border-color: var(--border);
-  }
+:global(.dark) .signInFeatures {
+  background: var(--secondary);
+  border-color: var(--border);
 }
 
 .signInFeatures li {
@@ -426,13 +430,11 @@
   box-shadow: 0 4px 14px rgba(123, 47, 190, 0.35);
 }
 
-@media (prefers-color-scheme: dark) {
-  .signInBtn {
-    background: var(--card-bg);
-    color: var(--foreground);
-    border: 1px solid var(--border);
-    box-shadow: none;
-  }
+:global(.dark) .signInBtn {
+  background: var(--card-bg);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  box-shadow: none;
 }
 
 .signInBtn:hover {
