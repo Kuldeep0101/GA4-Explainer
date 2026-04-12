@@ -156,8 +156,20 @@ export default function Dashboard() {
     }
   };
 
-  const handleDelete = (id: string) => {
-    setDeleteId(id);
+  const handleDelete = async (id: string) => {
+    // Optimistic UI update
+    setClients(prev => prev.filter(c => c.id !== id));
+    setDeleteId(null);
+
+    const { error } = await supabase
+      .from('clients')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting client:', error);
+      alert('Failed to delete client. Please refresh and try again.');
+    }
   };
 
   // ── Auth gates ────────────────────────────────────────────────────────────

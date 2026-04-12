@@ -104,35 +104,40 @@ export async function POST(request: Request) {
     const userPrompt = buildUserPrompt(ga4Data);
 
     // Call Google Gemini
-    const ai = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY,
-      httpOptions: { apiVersion: 'v1' }
-    });
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
     // We combine the system prompt and user prompt manually since v1 
     // doesn't natively support systemInstruction in the config yet.
     const combinedPrompt = `${SYSTEM_PROMPT}\n\nUser Data:\n${userPrompt}\n\nIMPORTANT: Return ONLY a raw JSON object. Do not wrap it in markdown block quotes (\`\`\`). NEVER use raw unescaped newlines inside JSON strings (use \\n instead).`;
 
+    console.log('--- GEMINI REQUEST START ---');
+    console.log('Sending data for:', clientName);
+    
+    // Using correct syntax for @google/genai (version 1.x)
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-1.5-flash',
       contents: combinedPrompt
     });
 
     const rawText = response.text || '';
+    console.log('Gemini raw response length:', rawText.length);
 
     // Parse JSON — strip accidental markdown fences if present
     let report: ParsedReport;
     try {
-      report = JSON.parse(rawText);
-    } catch {
+      // Handle the case where Gemini returns code blocks
       const clean = rawText.replace(/```json|```/g, '').trim();
       report = JSON.parse(clean);
+    } catch (parseError) {
+      console.error('JSON Parse Error. Raw Text:', rawText);
+      throw new Error('AI returned invalid JSON format');
     }
 
+    console.log('--- GEMINI REQUEST SUCCESS ---');
     return NextResponse.json({ report });
 
   } catch (error: any) {
     console.error('Report Generation Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'AI Generation Failed' }, { status: 500 });
   }
 }
