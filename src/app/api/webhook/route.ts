@@ -7,6 +7,10 @@ export async function POST(req: Request) {
   const signature = req.headers.get('x-dodo-signature');
   const webhookSecret = process.env.DODO_WEBHOOK_SECRET;
 
+  console.log('--- DODO WEBHOOK START ---');
+  console.log('Signature Header:', signature);
+  console.log('Webhook Secret Exists:', !!webhookSecret);
+
   // 1. Verify Signature (Security)
   if (!webhookSecret || !signature) {
     console.error('Webhook Error: Missing secret or signature');
@@ -17,38 +21,49 @@ export async function POST(req: Request) {
   const digest = hmac.update(body).digest('hex');
 
   if (digest !== signature) {
-    console.error('Webhook Error: Invalid signature');
+    console.error('Webhook Error: Invalid signature.');
+    console.error('Calculated Digest:', digest);
+    console.error('Received Signature:', signature);
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
   }
 
   // 2. Parse Payload
   const event = JSON.parse(body);
-  console.log('Dodo Webhook Received:', event.type);
+  console.log('Event Type:', event.type);
+  console.log('Full Event Data:', JSON.stringify(event, null, 2));
 
   // 3. Handle Events
-  // Dodo typically sends 'subscription.created' or 'order.succeeded'
-  if (event.type === 'subscription.created' || event.type === 'order.succeeded') {
+  // Dodo sends various events like 'subscription.created', 'order.succeeded', etc.
+  if (event.type.includes('subscription') || event.type.includes('order') || event.type.includes('payment')) {
     const data = event.data;
-    const customerEmail = data.customer?.email;
-    const customerId = data.customer?.id;
+    // Try to find email in multiple common locations
+    const customerEmail = data?.customer?.email || data?.email || event.customer_email;
+    const customerId = data?.customer?.id || data?.customer_id;
 
     if (customerEmail) {
-      console.log(`Upgrading user ${customerEmail} to PRO`);
+      console.log(`STAGING UPGRADE: User ${customerEmail}`);
       
-      const { error } = await supabaseAdmin
+      const { data: updateData, error } = await supabaseAdmin
         .from('users')
         .update({ 
           is_pro: true,
           dodo_customer_id: customerId 
         })
-        .eq('email', customerEmail);
+        .eq('email', customerEmail.toLowerCase())
+        .select();
 
       if (error) {
         console.error('Supabase Update Error:', error);
-        return NextResponse.json({ error: 'Database update failed' }, { status: 500 });
+      } else {
+        console.log('SUCCESS: User is now PRO in Database:', updateData);
       }
+    } else {
+      console.error('Webhook Error: No customer email found in payload');
     }
   }
+
+  console.log('--- DODO WEBHOOK END ---');
+  return NextResponse.json({ received: true });
 
   return NextResponse.json({ received: true });
 }

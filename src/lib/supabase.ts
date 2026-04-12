@@ -7,9 +7,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Admin client for server-side actions (bypasses RLS)
 // We only initialize this if we are on the server to prevent frontend crashes
-export const supabaseAdmin = typeof window === 'undefined' 
+export const supabaseAdmin = typeof window === 'undefined'
   ? createClient(
-      supabaseUrl,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-    )
+    supabaseUrl,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+  )
   : null as any;
