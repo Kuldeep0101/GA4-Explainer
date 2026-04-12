@@ -190,7 +190,7 @@ export default function Dashboard() {
             Connect your Google Analytics, get a clear performance summary your clients actually understand — in seconds.
           </p>
           <ul className={styles.signInFeatures}>
-            <li>✦ AI-powered plain-English summaries via Claude</li>
+            <li>✦ AI-powered plain-English summaries</li>
             <li>✦ Manage all your clients in one dashboard</li>
             <li>✦ One-click PDF export — send straight to clients</li>
             <li>✦ Last 7, 30, or 90 day date ranges</li>
@@ -288,7 +288,7 @@ export default function Dashboard() {
           </div>
           <div className={styles.statItem}>
             <TrendingUp size={16} />
-            <span>Reports generated with <strong>Claude AI</strong></span>
+            <span>Reports generated with <strong>Advanced AI</strong></span>
           </div>
           <div className={styles.statItem}>
             <FileText size={16} />
