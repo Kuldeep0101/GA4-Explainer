@@ -220,7 +220,7 @@ export default function Dashboard() {
             </svg>
             Continue with Google
           </button>
-          <p className={styles.signInNote}>3-day free trial · No credit card required</p>
+          <p className={styles.signInNote}>7-day free trial · No credit card required</p>
         </div>
       </div>
     );
