@@ -42,6 +42,7 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [emailTarget, setEmailTarget] = useState('');
   const [isEmailing, setIsEmailing] = useState(false);
+  const [emailStatus, setEmailStatus] = useState<{type: 'sending' | 'success' | 'error', message: string} | null>(null);
 
   // Redirect if not logged in
   useEffect(() => {
@@ -169,66 +170,78 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
     e.preventDefault();
     if (!emailTarget) return;
 
-    setIsEmailing(true);
-    try {
-      const html2canvas = (await import('html2canvas')).default;
-      const { jsPDF } = await import('jspdf');
-      const element = document.getElementById('report-content');
-      if (!element) throw new Error('Report not found');
+    // Immediately close modal and show background processing toast
+    setIsEmailModalOpen(false);
+    setEmailStatus({ type: 'sending', message: `Generating PDF and emailing ${emailTarget}...` });
+    
+    // Store reference to prevent race conditions during background task
+    const target = emailTarget;
+    setEmailTarget('');
 
-      const canvas = await html2canvas(element, {
-        scale: 1.5, // keep it slightly lighter for email limits
-        useCORS: true,
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight,
-      });
-      const imgData = canvas.toDataURL('image/jpeg', 0.8);
+    // Fire and forget function to unblock the main UI thread
+    const executeBackgroundEmail = async () => {
+      try {
+        const html2canvas = (await import('html2canvas')).default;
+        const { jsPDF } = await import('jspdf');
+        const element = document.getElementById('report-content');
+        if (!element) throw new Error('Report not found');
 
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const totalImgHeight = (canvas.height * pageWidth) / canvas.width;
+        const canvas = await html2canvas(element, {
+          scale: 1.5, // keep it slightly lighter for email limits
+          useCORS: true,
+          windowWidth: element.scrollWidth,
+          windowHeight: element.scrollHeight,
+        });
+        const imgData = canvas.toDataURL('image/jpeg', 0.8);
 
-      let remainingHeight = totalImgHeight;
-      let yOffset = 0;
-      let isFirstPage = true;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const totalImgHeight = (canvas.height * pageWidth) / canvas.width;
 
-      while (remainingHeight > 0) {
-        if (!isFirstPage) pdf.addPage();
-        const sliceHeightMm = Math.min(remainingHeight, pageHeight);
-        pdf.addImage(imgData, 'JPEG', 0, -(yOffset), pageWidth, totalImgHeight);
-        yOffset += sliceHeightMm;
-        remainingHeight -= sliceHeightMm;
-        isFirstPage = false;
+        let remainingHeight = totalImgHeight;
+        let yOffset = 0;
+        let isFirstPage = true;
+
+        while (remainingHeight > 0) {
+          if (!isFirstPage) pdf.addPage();
+          const sliceHeightMm = Math.min(remainingHeight, pageHeight);
+          pdf.addImage(imgData, 'JPEG', 0, -(yOffset), pageWidth, totalImgHeight);
+          yOffset += sliceHeightMm;
+          remainingHeight -= sliceHeightMm;
+          isFirstPage = false;
+        }
+
+        // Extract Base64 directly without saving
+        const pdfBase64 = pdf.output('datauristring');
+
+        // Send to backend route
+        const res = await fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            email: target, 
+            pdfBase64, 
+            clientName,
+            senderEmail: session?.user?.email // Pass logged-in agency email dynamically
+          })
+        });
+
+        const resData = await res.json();
+        if (!res.ok) throw new Error(resData.error || 'Failed to send email');
+
+        console.log(`✅ Email sent successfully via Resend to ${target}`);
+        setEmailStatus({ type: 'success', message: 'Report securely emailed to the client!' });
+        setTimeout(() => setEmailStatus(null), 5000);
+      } catch (err: any) {
+        console.error('❌ Background Email Error:', err);
+        setEmailStatus({ type: 'error', message: err.message || 'Error executing email export' });
+        setTimeout(() => setEmailStatus(null), 7000);
       }
+    };
 
-      // Extract Base64 directly without saving
-      const pdfBase64 = pdf.output('datauristring');
-
-      // Send to backend route
-      const res = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          email: emailTarget, 
-          pdfBase64, 
-          clientName,
-          senderEmail: session?.user?.email // Pass logged-in agency email dynamically
-        })
-      });
-
-      const resData = await res.json();
-      if (!res.ok) throw new Error(resData.error || 'Failed to send email');
-
-      alert('Report securely emailed to the client!');
-      setIsEmailModalOpen(false);
-      setEmailTarget('');
-    } catch (err: any) {
-      console.error(err);
-      alert(err.message || 'Error executing email export');
-    } finally {
-      setIsEmailing(false);
-    }
+    // Execute out-of-band
+    executeBackgroundEmail();
   };
 
   const sentimentIcon = (s: string) => {
@@ -439,34 +452,50 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
           <div className={styles.modal}>
             <div className={styles.modalHeader}>
               <h2>Email PDF Report</h2>
-              <button className={styles.closeBtn} onClick={() => !isEmailing && setIsEmailModalOpen(false)}>
+              <button className={styles.closeBtn} onClick={() => setIsEmailModalOpen(false)}>
                 <X size={20} />
               </button>
             </div>
             
             <form onSubmit={handleEmailReport} className={styles.modalForm}>
               <div className="form-group">
-                <label>Client Email Address</label>
+                <label htmlFor="emailTarget">Client Email Address</label>
                 <input
+                  id="emailTarget"
+                  name="emailTarget"
                   type="email"
                   value={emailTarget}
                   onChange={e => setEmailTarget(e.target.value)}
                   placeholder="client@company.com"
                   required
-                  disabled={isEmailing}
-                  className="input"
+                  className={styles.modalInput}
                 />
               </div>
               
               <div className={styles.modalActions}>
-                <button type="button" className="btn-secondary" onClick={() => setIsEmailModalOpen(false)} disabled={isEmailing}>
+                <button type="button" className="btn-secondary" onClick={() => setIsEmailModalOpen(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary" disabled={isEmailing}>
-                  {isEmailing ? <><Loader2 size={16} className={styles.spinning} /> Generating & Sending...</> : 'Send via Resend'}
+                <button type="submit" className="btn-primary">
+                  Send via Resend
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Background Task Toast */}
+      {emailStatus && (
+        <div className={styles.toastContainer}>
+          <div className={`${styles.toast} ${
+            emailStatus.type === 'sending' ? styles.toastSending : 
+            emailStatus.type === 'success' ? styles.toastSuccess : styles.toastError
+          }`}>
+            {emailStatus.type === 'sending' && <Loader2 size={18} className={styles.spinning} />}
+            {emailStatus.type === 'success' && <CheckCircle size={18} color="#22c55e" />}
+            {emailStatus.type === 'error' && <AlertCircle size={18} color="#ef4444" />}
+            <span>{emailStatus.message}</span>
           </div>
         </div>
       )}
