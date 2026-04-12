@@ -32,16 +32,16 @@ export default function Dashboard() {
     const syncUserAndClients = async () => {
       const email = session?.user?.email;
       if (!email) return;
-      
+
       // 1. Sync User / Verify Pro Status
       let { data: userRow } = await supabase.from('users').select('*').eq('email', email).single();
-      
+
       // If user doesn't exist, create them
       if (!userRow) {
         const { data: newUser } = await supabase.from('users').insert([{ email, is_pro: false }]).select().single();
         userRow = newUser;
       }
-      
+
       if (userRow?.is_pro) {
         setIsPro(true);
       } else if (typeof window !== 'undefined' && window.location.search.includes('success=true')) {
@@ -122,12 +122,12 @@ export default function Dashboard() {
   const handleAddClient = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newClientName || !newClientProp || !session?.user?.email) return;
-    
+
     // Close modal & reset fast for good UX
     setIsModalOpen(false);
-    
+
     const cleanPropId = newClientProp.replace('properties/', '').trim();
-    
+
     // Create DB record
     const newClientPayload = {
       user_email: session.user.email,
@@ -144,7 +144,7 @@ export default function Dashboard() {
     setNewClientProp('');
 
     const { data, error } = await supabase.from('clients').insert([newClientPayload]).select();
-    
+
     if (data && !error) {
       // Swap temp ID with real DB UUID
       setClients(prev => prev.map(c => c.id === tempId ? {
@@ -208,7 +208,7 @@ export default function Dashboard() {
             </svg>
             Continue with Google
           </button>
-          <p className={styles.signInNote}>7-day free trial · No credit card required</p>
+          <p className={styles.signInNote}>3-day free trial · No credit card required</p>
         </div>
       </div>
     );
