@@ -221,8 +221,9 @@ export default function Dashboard() {
             Continue with Google
           </button>
           <p className={styles.signInNote}>7-day free trial · No credit card required</p>
-          <div style={{ marginTop: '20px', textAlign: 'center' }}>
+          <div style={{ marginTop: '20px', textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '16px' }}>
             <Link href="/privacy" style={{ color: '#a1a1aa', fontSize: '12px', textDecoration: 'none' }}>Privacy Policy</Link>
+            <Link href="/terms" style={{ color: '#a1a1aa', fontSize: '12px', textDecoration: 'none' }}>Terms of Service</Link>
           </div>
         </div>
       </div>
@@ -445,9 +446,12 @@ export default function Dashboard() {
       </div>
 
       {/* Footer */}
-      <footer style={{ marginTop: '60px', paddingTop: '20px', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
+      <footer style={{ marginTop: '60px', paddingTop: '20px', borderTop: '1px solid var(--border)', textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '20px' }}>
         <Link href="/privacy" style={{ color: 'var(--muted)', fontSize: '13px', textDecoration: 'none' }}>
           Privacy Policy
+        </Link>
+        <Link href="/terms" style={{ color: 'var(--muted)', fontSize: '13px', textDecoration: 'none' }}>
+          Terms of Service
         </Link>
       </footer>
     </main>
