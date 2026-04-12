@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     if (!response.ok) {
       const errorData = await response.text();
       console.error('Dodo API Error:', errorData);
-      return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 });
+      return NextResponse.json({ error: `Dodo Error: ${errorData}` }, { status: 500 });
     }
 
     const data = await response.json();
