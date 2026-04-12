@@ -17,15 +17,15 @@ export async function POST(request: Request) {
 
     const { plan } = await request.json(); // 'starter' or 'agency'
 
-    // Pricing Logic Matrix (Hardcoded mapping for fast deployment)
+    // Pricing Logic Matrix
     const PRICING_MATRIX: Record<string, { IN: string, GLOBAL: string }> = {
       starter: {
         IN: 'pdt_0NcYZ7nvAfhkKG2gpttPH', // ₹2,999
-        GLOBAL: 'pdt_0NcXgPRMt88V7bpkC3m7W' // $59 (updated from $49)
+        GLOBAL: 'pdt_0NcXgPRMt88V7bpkC3m7W' // $59
       },
       agency: {
-        IN: 'pdt_0O1e2f3g4h5i6j7k8l9m', // PLACEHOLDER: Please provide Agency India ID
-        GLOBAL: 'pdt_0O9m8l7k6j5i4h3g2f1e' // PLACEHOLDER: Please provide Agency Global ID
+        IN: 'pdt_0NcYmZrHJsgdVGj9dEj6L', // ₹5,999
+        GLOBAL: 'pdt_0NcYntt4U7FJzIfhP98p1' // $129 (or set global price)
       }
     };
 
