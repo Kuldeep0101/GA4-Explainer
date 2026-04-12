@@ -436,9 +436,9 @@
 }
 
 .signInBtn:hover {
-  background: var(--secondary);
-  border-color: var(--primary);
-  box-shadow: 0 4px 12px rgba(91, 76, 240, 0.15);
+  background: #6A22AD; /* Darker purple on hover — keeps text readable */
+  border-color: transparent;
+  box-shadow: 0 6px 20px rgba(123, 47, 190, 0.45);
   transform: translateY(-1px);
 }
 

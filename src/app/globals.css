@@ -1,11 +1,11 @@
 :root {
-  --background: #fdfdfc;
+  --background: #F2F1ED;   /* warm parchment — no more eye-burning white */
   --foreground: #171717;
   --primary: #5b4cf0;
   --primary-hover: #4e40db;
-  --secondary: #f4f4f5;
-  --border: #e4e4e7;
-  --card-bg: #ffffff;
+  --secondary: #ECEAE3;   /* warm off-white secondary surfaces */
+  --border: #DDD9CF;      /* warm border to match */
+  --card-bg: #FAFAF7;     /* card just slightly lighter than the bg */
   --muted: #71717a;
   --radius: 12px;
   --shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
