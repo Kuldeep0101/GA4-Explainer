@@ -23,9 +23,7 @@ export async function POST(request: Request) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        billing: {
-          country: "US", // Dodo requires a country code
-        },
+        // Removed hardcoded billing country so Dodo geolocates the user automatically for UPI
         customer: {
           email: userEmail,
           name: session?.user?.name || 'Valued Customer'
