@@ -25,6 +25,7 @@ export default function Dashboard() {
   const [mounted, setMounted] = useState(false);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [isPro, setIsPro] = useState(false);
+  const [userPlan, setUserPlan] = useState<'free' | 'starter' | 'agency'>('free'); // Multi-tier support
 
   // ── Database Sync (Supabase) ───────────────────────────
   useEffect(() => {
@@ -45,9 +46,13 @@ export default function Dashboard() {
 
       if (userRow?.is_pro) {
         setIsPro(true);
+        setUserPlan(userRow?.plan || 'starter');
       } else if (typeof window !== 'undefined' && window.location.search.includes('success=true')) {
         // Optimistic UI for instant return from Dodo Payments (before webhook fires)
         setIsPro(true);
+        const urlParams = new URLSearchParams(window.location.search);
+        const planParam = urlParams.get('plan') as 'starter' | 'agency' || 'starter';
+        setUserPlan(planParam);
         window.history.replaceState(null, '', window.location.pathname);
       }
 
@@ -99,13 +104,13 @@ export default function Dashboard() {
     await supabase.from('clients').delete().eq('id', deleteId);
   };
 
-  const handleUpgrade = async () => {
+  const handleUpgrade = async (plan: 'starter' | 'agency') => {
     setIsCheckoutLoading(true);
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}) // Pulled dynamically on the secure backend
+        body: JSON.stringify({ plan }) // Pass the specific tier
       });
       const data = await res.json();
       if (data.url) {
@@ -122,7 +127,14 @@ export default function Dashboard() {
 
   const handleAddClient = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newClientName || !newClientProp || !session?.user?.email) return;
+    if (!newClientName || !newClientProp) return;
+
+    // Plan Logic: Restrict Starter to 5 clients
+    if (userPlan === 'starter' && clients.length >= 5) {
+      alert('Starter plan is limited to 5 clients. Upgrade to Agency for unlimited access!');
+      return;
+    }
+    if (!session?.user?.email) return;
 
     // Close modal & reset fast for good UX
     setIsModalOpen(false);
@@ -197,21 +209,36 @@ export default function Dashboard() {
             GA4 Explainer
           </div>
           <h1 className={styles.signInTitle}>
-            Plain-English GA4 Reports<br />for Digital Agencies
+             Your clients ask &quot;How did we do?&quot; — answer them in 30 seconds.
           </h1>
           <p className={styles.signInSubtitle}>
-            Connect your Google Analytics, get a clear performance summary your clients actually understand — in seconds.
+            Stop struggling with GA4 dashboards. Stop worrying about monthly reports. Connect your data and generate plain-English summaries your clients will actually read.
           </p>
-          <ul className={styles.signInFeatures}>
-            <li>✦ AI-powered plain-English summaries</li>
-            <li>✦ Manage all your clients in one dashboard</li>
-            <li>✦ One-click PDF export — send straight to clients</li>
-            <li>✦ Last 7, 30, or 90 day date ranges</li>
-          </ul>
+          
+          {/* How It Works */}
+          <div style={{ width: '100%', margin: '20px 0', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
+            <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--primary)', marginBottom: '15px' }}>How it works</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', textAlign: 'center' }}>
+              <div>
+                <div style={{ background: 'var(--secondary)', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px', fontSize: '12px', fontWeight: '700' }}>1</div>
+                <p style={{ fontSize: '11px', fontWeight: '600' }}>Connect GA4</p>
+              </div>
+              <div>
+                <div style={{ background: 'var(--secondary)', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px', fontSize: '12px', fontWeight: '700' }}>2</div>
+                <p style={{ fontSize: '11px', fontWeight: '600' }}>AI Summary</p>
+              </div>
+              <div>
+                <div style={{ background: 'var(--secondary)', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px', fontSize: '12px', fontWeight: '700' }}>3</div>
+                <p style={{ fontSize: '11px', fontWeight: '600' }}>One-Click PDF</p>
+              </div>
+            </div>
+          </div>
+
           <button
             id="google-signin-btn"
             className={styles.signInBtn}
             onClick={() => signIn('google')}
+            style={{ marginBottom: '16px' }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -221,10 +248,11 @@ export default function Dashboard() {
             </svg>
             Continue with Google
           </button>
-          <p className={styles.signInNote}>7-day free trial · No credit card required</p>
-          <div style={{ marginTop: '20px', textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '16px' }}>
-            <Link href="/privacy" style={{ color: '#a1a1aa', fontSize: '12px', textDecoration: 'none' }}>Privacy Policy</Link>
-            <Link href="/terms" style={{ color: '#a1a1aa', fontSize: '12px', textDecoration: 'none' }}>Terms of Service</Link>
+          
+          <p className={styles.signInNote}>Join 10+ agencies saving 20h/month on reporting.</p>
+          <div style={{ marginTop: '24px', textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '16px' }}>
+            <Link href="/privacy" style={{ color: '#a1a1aa', fontSize: '11px', textDecoration: 'none' }}>Privacy Policy</Link>
+            <Link href="/terms" style={{ color: '#a1a1aa', fontSize: '11px', textDecoration: 'none' }}>Terms of Service</Link>
           </div>
         </div>
       </div>
@@ -265,18 +293,28 @@ export default function Dashboard() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {isPro ? (
-            <div className={styles.proBadge}>
-              <CheckCircle size={14} /> PRO MEMBER
+            <div className={styles.proBadge} style={{ background: userPlan === 'agency' ? 'linear-gradient(135deg, #7c3aed 0%, #5b4cf0 100%)' : undefined }}>
+              <CheckCircle size={14} /> {userPlan === 'agency' ? 'AGENCY' : 'STARTER'} PLAN
             </div>
           ) : (
-            <button
-              className="btn-primary"
-              onClick={handleUpgrade}
-              disabled={isCheckoutLoading}
-              style={{ padding: '8px 14px', fontSize: '13px', background: 'var(--foreground)', color: 'var(--background)' }}
-            >
-              {isCheckoutLoading ? 'Wait...' : '⭐ Upgrade to Pro'}
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                className="btn-primary"
+                onClick={() => handleUpgrade('starter')}
+                disabled={isCheckoutLoading}
+                style={{ padding: '8px 12px', fontSize: '12px', background: 'var(--foreground)', color: 'var(--background)' }}
+              >
+                Starter
+              </button>
+              <button
+                className="btn-primary"
+                onClick={() => handleUpgrade('agency')}
+                disabled={isCheckoutLoading}
+                style={{ padding: '8px 12px', fontSize: '12px', background: 'var(--primary)', color: 'white' }}
+              >
+                Agency
+              </button>
+            </div>
           )}
           {session?.user?.image && (
             <img

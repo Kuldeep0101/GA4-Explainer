@@ -15,11 +15,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing DODO_API_KEY' }, { status: 500 });
     }
 
+    const { plan } = await request.json(); // 'starter' or 'agency'
+
+    // Pricing Logic Matrix (Hardcoded mapping for fast deployment)
+    const PRICING_MATRIX: Record<string, { IN: string, GLOBAL: string }> = {
+      starter: {
+        IN: 'pdt_0NcYZ7nvAfhkKG2gpttPH', // ₹2,999
+        GLOBAL: 'pdt_0NcXgPRMt88V7bpkC3m7W' // $59 (updated from $49)
+      },
+      agency: {
+        IN: 'pdt_0O1e2f3g4h5i6j7k8l9m', // PLACEHOLDER: Please provide Agency India ID
+        GLOBAL: 'pdt_0O9m8l7k6j5i4h3g2f1e' // PLACEHOLDER: Please provide Agency Global ID
+      }
+    };
+
     // Geofenced Pricing Interceptor
     const rawCountryHeader = request.headers.get('x-vercel-ip-country');
-    const userCountry = rawCountryHeader || 'US'; // Localhost fallback
+    const userCountry = rawCountryHeader || 'US';
 
-    const targetProductId = userCountry === 'IN' ? 'pdt_0NcYZ7nvAfhkKG2gpttPH' : 'pdt_0NcXgPRMt88V7bpkC3m7W';
+    const matrix = PRICING_MATRIX[plan] || PRICING_MATRIX.starter;
+    const targetProductId = userCountry === 'IN' ? matrix.IN : matrix.GLOBAL;
+
+    // Use specific IDs if they exist in matrix, otherwise fallback to the ones user provided earlier
+    // For now, I'll use the ones provided as the Starter ones.
 
     // We are migrating this to the live domain endpoint
     const response = await fetch("https://live.dodopayments.com/subscriptions", {
