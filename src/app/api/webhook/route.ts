@@ -32,9 +32,10 @@ export async function POST(req: Request) {
 
   // Svix signature format: v1,base64_hash
   const signedPayload = `${msgId}.${timestamp}.${body}`;
-  const secretBytes = webhookSecret.split('_')[1] || webhookSecret; // Handle 'whsec_' prefix if present
+  const secretPart = webhookSecret.split('_')[1] || webhookSecret; // Handle 'whsec_' prefix
+  const secretBuffer = Buffer.from(secretPart, 'base64');
   
-  const hmac = crypto.createHmac('sha256', secretBytes);
+  const hmac = crypto.createHmac('sha256', secretBuffer);
   const calculatedSignature = hmac.update(signedPayload).digest('base64');
   
   const expectedSignature = signature.split(',')[1]; // Get the part after 'v1,'
