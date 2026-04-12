@@ -28,7 +28,7 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
   const resolvedParams = use(params);
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const clientName = searchParams.get('name') || 'Client';
   const clientId = searchParams.get('clientId') || null;
   const propertyId = decodeURIComponent(resolvedParams.id);
@@ -209,7 +209,12 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
       const res = await fetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailTarget, pdfBase64, clientName })
+        body: JSON.stringify({ 
+          email: emailTarget, 
+          pdfBase64, 
+          clientName,
+          senderEmail: session?.user?.email // Pass logged-in agency email dynamically
+        })
       });
 
       const resData = await res.json();

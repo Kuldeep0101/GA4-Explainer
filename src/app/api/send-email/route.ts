@@ -5,7 +5,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
   try {
-    const { email, pdfBase64, clientName } = await req.json();
+    const { email, pdfBase64, clientName, senderEmail } = await req.json();
 
     if (!email || !pdfBase64) {
       return NextResponse.json({ error: 'Email and PDF are required' }, { status: 400 });
@@ -19,7 +19,9 @@ export async function POST(req: Request) {
     const base64Content = pdfBase64.replace(/^data:application\/pdf;base64,/, '');
 
     const data = await resend.emails.send({
-      from: 'GA4 Explainer <onboarding@resend.dev>', // Resend test email. Must verify domain for custom from address.
+      // from: 'GA4 Explainer <onboarding@resend.dev>',
+      from: senderEmail || 'GA4 Explainer <onboarding@resend.dev>', // Dynamically updated as per the logged-in user
+      replyTo: senderEmail, // Corrected from reply_to
       to: [email],
       subject: `${clientName} - Plain-English GA4 Report`,
       text: `Hello,\n\nPlease find attached the latest website performance report for ${clientName}.\n\nBest regards,\nYour Agency`,
