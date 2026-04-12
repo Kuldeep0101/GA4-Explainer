@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { Download, ArrowLeft, Loader2, RefreshCw, CheckCircle, AlertCircle, MinusCircle, TrendingUp, Users, Clock, MousePointerClick, Globe, Smartphone, Monitor, Tablet, Send, X } from 'lucide-react';
+import { Download, ArrowLeft, Loader2, RefreshCw, CheckCircle, AlertCircle, MinusCircle, TrendingUp, Users, Clock, MousePointerClick, Globe, Smartphone, Monitor, Tablet } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -28,7 +28,7 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
   const resolvedParams = use(params);
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const clientName = searchParams.get('name') || 'Client';
   const clientId = searchParams.get('clientId') || null;
   const propertyId = decodeURIComponent(resolvedParams.id);
@@ -37,12 +37,6 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
   const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState('30');
   const [reportData, setReportData] = useState<FullReportData | null>(null);
-
-  // Email Modal States
-  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
-  const [emailTarget, setEmailTarget] = useState('');
-  const [isEmailing, setIsEmailing] = useState(false);
-  const [emailStatus, setEmailStatus] = useState<{type: 'sending' | 'success' | 'error', message: string} | null>(null);
 
   // Redirect if not logged in
   useEffect(() => {
@@ -166,84 +160,6 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
     pdf.save(`${clientName.replace(/\s+/g, '_')}_GA4_Report.pdf`);
   };
 
-  const handleEmailReport = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!emailTarget) return;
-
-    // Immediately close modal and show background processing toast
-    setIsEmailModalOpen(false);
-    setEmailStatus({ type: 'sending', message: `Generating PDF and emailing ${emailTarget}...` });
-    
-    // Store reference to prevent race conditions during background task
-    const target = emailTarget;
-    setEmailTarget('');
-
-    // Fire and forget function to unblock the main UI thread
-    const executeBackgroundEmail = async () => {
-      try {
-        const html2canvas = (await import('html2canvas')).default;
-        const { jsPDF } = await import('jspdf');
-        const element = document.getElementById('report-content');
-        if (!element) throw new Error('Report not found');
-
-        const canvas = await html2canvas(element, {
-          scale: 1.5, // keep it slightly lighter for email limits
-          useCORS: true,
-          windowWidth: element.scrollWidth,
-          windowHeight: element.scrollHeight,
-        });
-        const imgData = canvas.toDataURL('image/jpeg', 0.8);
-
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const totalImgHeight = (canvas.height * pageWidth) / canvas.width;
-
-        let remainingHeight = totalImgHeight;
-        let yOffset = 0;
-        let isFirstPage = true;
-
-        while (remainingHeight > 0) {
-          if (!isFirstPage) pdf.addPage();
-          const sliceHeightMm = Math.min(remainingHeight, pageHeight);
-          pdf.addImage(imgData, 'JPEG', 0, -(yOffset), pageWidth, totalImgHeight);
-          yOffset += sliceHeightMm;
-          remainingHeight -= sliceHeightMm;
-          isFirstPage = false;
-        }
-
-        // Extract Base64 directly without saving
-        const pdfBase64 = pdf.output('datauristring');
-
-        // Send to backend route
-        const res = await fetch('/api/send-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            email: target, 
-            pdfBase64, 
-            clientName,
-            senderEmail: session?.user?.email // Pass logged-in agency email dynamically
-          })
-        });
-
-        const resData = await res.json();
-        if (!res.ok) throw new Error(resData.error || 'Failed to send email');
-
-        console.log(`✅ Email sent successfully via Resend to ${target}`);
-        setEmailStatus({ type: 'success', message: 'Report securely emailed to the client!' });
-        setTimeout(() => setEmailStatus(null), 5000);
-      } catch (err: any) {
-        console.error('❌ Background Email Error:', err);
-        setEmailStatus({ type: 'error', message: err.message || 'Error executing email export' });
-        setTimeout(() => setEmailStatus(null), 7000);
-      }
-    };
-
-    // Execute out-of-band
-    executeBackgroundEmail();
-  };
-
   const sentimentIcon = (s: string) => {
     if (s === 'positive') return <CheckCircle size={16} />;
     if (s === 'negative') return <AlertCircle size={16} />;
@@ -280,9 +196,6 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
         <div style={{ display: 'flex', gap: '8px' }}>
           <button className="btn-secondary" onClick={() => loadReport(dateRange)} disabled={loading} title="Regenerate">
             <RefreshCw size={16} className={loading ? styles.spinning : ''} />
-          </button>
-          <button className="btn-secondary" onClick={() => setIsEmailModalOpen(true)} disabled={loading || !reportData}>
-            <Send size={16} /> Email Client
           </button>
           <button className="btn-primary" onClick={handleDownloadPDF} disabled={loading || !reportData}>
             <Download size={16} /> Download PDF
@@ -446,59 +359,6 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
         </div>
       )}
 
-      {/* Email Modal Overlay */}
-      {isEmailModalOpen && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <div className={styles.modalHeader}>
-              <h2>Email PDF Report</h2>
-              <button className={styles.closeBtn} onClick={() => setIsEmailModalOpen(false)}>
-                <X size={20} />
-              </button>
-            </div>
-            
-            <form onSubmit={handleEmailReport} className={styles.modalForm}>
-              <div className="form-group">
-                <label htmlFor="emailTarget">Client Email Address</label>
-                <input
-                  id="emailTarget"
-                  name="emailTarget"
-                  type="email"
-                  value={emailTarget}
-                  onChange={e => setEmailTarget(e.target.value)}
-                  placeholder="client@company.com"
-                  required
-                  className={styles.modalInput}
-                />
-              </div>
-              
-              <div className={styles.modalActions}>
-                <button type="button" className="btn-secondary" onClick={() => setIsEmailModalOpen(false)}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn-primary">
-                  Send via Resend
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Background Task Toast */}
-      {emailStatus && (
-        <div className={styles.toastContainer}>
-          <div className={`${styles.toast} ${
-            emailStatus.type === 'sending' ? styles.toastSending : 
-            emailStatus.type === 'success' ? styles.toastSuccess : styles.toastError
-          }`}>
-            {emailStatus.type === 'sending' && <Loader2 size={18} className={styles.spinning} />}
-            {emailStatus.type === 'success' && <CheckCircle size={18} color="#22c55e" />}
-            {emailStatus.type === 'error' && <AlertCircle size={18} color="#ef4444" />}
-            <span>{emailStatus.message}</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
