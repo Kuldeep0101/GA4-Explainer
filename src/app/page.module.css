@@ -81,6 +81,7 @@
   flex-direction: column;
   gap: 16px;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08); /* Fix 4: depth on white cards in light mode */
 }
 
 .clientCard:hover {
@@ -324,9 +325,8 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: var(--background);
-  /* Subtle grid pattern */
-  background-image: radial-gradient(circle at 1px 1px, var(--border) 1px, transparent 0);
+  background: #F8F8F6; /* Fix 1: Light gray bg so white card pops with contrast */
+  background-image: radial-gradient(circle at 1px 1px, #dadad8 1px, transparent 0);
   background-size: 32px 32px;
 }
 
@@ -384,10 +384,17 @@
   gap: 10px;
   text-align: left;
   width: 100%;
-  background: var(--secondary);
-  border: 1px solid var(--border);
+  background: #F5F0FF; /* Fix 3: Light purple bg for visual weight in light mode */
+  border: 1px solid #e5d9ff;
   border-radius: 12px;
   padding: 18px 20px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .signInFeatures {
+    background: var(--secondary);
+    border-color: var(--border);
+  }
 }
 
 .signInFeatures li {
@@ -396,6 +403,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  padding-left: 10px;
+  border-left: 3px solid #7B2FBE; /* Fix 3: Purple accent border per bullet */
 }
 
 .signInBtn {
@@ -406,14 +415,24 @@
   width: 100%;
   padding: 14px 20px;
   border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--card-bg);
-  color: var(--foreground);
+  border: none;
+  background: #7B2FBE; /* Fix 2: Solid brand purple CTA in light mode */
+  color: white;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: inherit;
+  box-shadow: 0 4px 14px rgba(123, 47, 190, 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+  .signInBtn {
+    background: var(--card-bg);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    box-shadow: none;
+  }
 }
 
 .signInBtn:hover {

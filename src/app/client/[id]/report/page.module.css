@@ -134,7 +134,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 36px 40px;
+  padding: 36px 40px 60px; /* Fix 5: Extra 24px bottom padding for breathing room */
   background: linear-gradient(135deg, #5b4cf0 0%, #7c3aed 100%);
   color: white;
 }
@@ -201,7 +201,7 @@
 /* ─── Summary ─────────────────────────────── */
 .summaryBlock {
   padding: 28px 40px;
-  background: #f8f7ff;
+  background: rgba(91, 76, 240, 0.05); /* Fix 5: 5% purple tint for gradual header transition */
   border-bottom: 1px solid #e8e4ff;
 }
 
