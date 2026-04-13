@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Plus, FileText, X, Users, TrendingUp, Zap, LogOut, LogIn, CheckCircle, Clock } from 'lucide-react';
 import { useSession, signIn, signOut } from 'next-auth/react';
+import { useTheme } from 'next-themes';
 import { supabase } from '@/lib/supabase';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import styles from './page.module.css';
@@ -18,6 +19,7 @@ interface Client {
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
+  const { theme, setTheme } = useTheme();
   const [clients, setClients] = useState<Client[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLimitModalOpen, setIsLimitModalOpen] = useState(false);
@@ -31,7 +33,7 @@ export default function Dashboard() {
   const [trialDaysRemaining, setTrialDaysRemaining] = useState<number | null>(null);
   const [isTrialModalOpen, setIsTrialModalOpen] = useState(false);
   const [archivedClients, setArchivedClients] = useState<any[]>([]);
-  const [usedSlotsList, setUsedSlotsList] = useState<{name: string, id: string}[]>([]);
+  const [usedSlotsList, setUsedSlotsList] = useState<{ name: string, id: string }[]>([]);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   // ── Database Sync (Supabase) ───────────────────────────
@@ -62,7 +64,7 @@ export default function Dashboard() {
         setUserPlan(planParam);
         window.history.replaceState(null, '', window.location.pathname);
       }
-      
+
       // 2. Trial Calculation (7 Days from created_at)
       if (userRow?.created_at) {
         const createdDate = new Date(userRow.created_at);
@@ -115,7 +117,7 @@ export default function Dashboard() {
         .eq('user_email', email)
         .eq('is_deleted', true)
         .eq('has_generated_report', true);
-      
+
       setArchivedClients(archived || []);
 
       // 5. Calculate unique slots for the modal (Identity Lock)
@@ -124,14 +126,14 @@ export default function Dashboard() {
         .from('clients')
         .select('property_id, name, is_deleted, has_generated_report')
         .eq('user_email', email);
-      
+
       const uniqueMap = new Map();
       allProps?.forEach(p => {
         if (!p.is_deleted || p.has_generated_report) {
           uniqueMap.set(p.property_id, p.name);
         }
       });
-      
+
       const uniqueList = Array.from(uniqueMap.entries()).map(([id, name]) => ({
         id,
         name: name || id
@@ -185,12 +187,12 @@ export default function Dashboard() {
       .from('clients')
       .select('property_id, is_deleted, has_generated_report')
       .eq('user_email', email);
-    
+
     const uniqueUsedIds = new Set(allUsedProps?.filter(c => !c.is_deleted || c.has_generated_report).map(c => c.property_id));
     const isAlreadyInSystem = allUsedProps?.find(c => c.property_id === cleanPropId);
 
     const limit = userPlan === 'agency' ? 999999 : (userPlan === 'starter' ? 5 : 2);
-    
+
     if (!isAlreadyInSystem && uniqueUsedIds.size >= limit) {
       setIsModalOpen(false);
       if (userPlan === 'free') setIsTrialModalOpen(true);
@@ -198,31 +200,31 @@ export default function Dashboard() {
       return;
     }
 
-      if (isAlreadyInSystem && isAlreadyInSystem.is_deleted) {
-        // Tweak Logic: Re-activate old property ID without consuming a new slot
-        const { error: restoreError } = await supabase
-          .from('clients')
-          .update({ is_deleted: false, name: newClientName })
-          .eq('user_email', email)
-          .eq('property_id', cleanPropId);
+    if (isAlreadyInSystem && isAlreadyInSystem.is_deleted) {
+      // Tweak Logic: Re-activate old property ID without consuming a new slot
+      const { error: restoreError } = await supabase
+        .from('clients')
+        .update({ is_deleted: false, name: newClientName })
+        .eq('user_email', email)
+        .eq('property_id', cleanPropId);
 
-        if (restoreError) {
-          alert("Error restoring client");
-          return;
-        }
-        
-        // Remove from archived locally for instant UI update
-        setArchivedClients(prev => prev.filter(c => c.property_id !== cleanPropId));
-      } else if (!isAlreadyInSystem) {
-        // Add brand new client
-        const { error: insertError } = await supabase
-          .from('clients')
-          .insert([{ 
-            user_email: email, 
-            name: newClientName, 
-            property_id: cleanPropId,
-            has_generated_report: false 
-          }]);
+      if (restoreError) {
+        alert("Error restoring client");
+        return;
+      }
+
+      // Remove from archived locally for instant UI update
+      setArchivedClients(prev => prev.filter(c => c.property_id !== cleanPropId));
+    } else if (!isAlreadyInSystem) {
+      // Add brand new client
+      const { error: insertError } = await supabase
+        .from('clients')
+        .insert([{
+          user_email: email,
+          name: newClientName,
+          property_id: cleanPropId,
+          has_generated_report: false
+        }]);
 
       if (insertError) {
         alert("Error adding client");
@@ -237,7 +239,7 @@ export default function Dashboard() {
       .eq('user_email', email)
       .eq('is_deleted', false)
       .order('created_at', { ascending: false });
-    
+
     setClients(refreshed?.map(c => ({
       id: c.id,
       name: c.name,
@@ -263,7 +265,7 @@ export default function Dashboard() {
 
     if (!error) {
       setClients(prev => prev.filter(c => c.id !== id));
-      
+
       // Dynamic Update: If this client had a report, move it to archived state instantly
       if (clientToArchive?.hasGeneratedReport) {
         setArchivedClients(prev => [{
@@ -274,7 +276,7 @@ export default function Dashboard() {
       }
     }
     setDeleteId(null);
-    
+
     if (error) {
       console.error('Error deleting client:', error);
       alert('Failed to delete client. Please refresh and try again.');
@@ -305,12 +307,12 @@ export default function Dashboard() {
             GA4 Explainer
           </div>
           <h1 className={styles.signInTitle}>
-             Your clients ask &quot;How did we do?&quot; — answer them in 30 seconds.
+            Your clients ask &quot;How did we do?&quot; — answer them in 30 seconds.
           </h1>
           <p className={styles.signInSubtitle}>
             Stop struggling with GA4 dashboards. Stop worrying about monthly reports. Connect your data and generate plain-English summaries your clients will actually read.
           </p>
-          
+
           {/* How It Works */}
           <div style={{ width: '100%', margin: '20px 0', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
             <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--primary)', marginBottom: '15px' }}>How it works</p>
@@ -344,7 +346,7 @@ export default function Dashboard() {
             </svg>
             Continue with Google
           </button>
-          
+
           <p className={styles.signInNote}>Join 10+ agencies saving 20h/month on reporting.</p>
           <div style={{ marginTop: '24px', textAlign: 'center', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px' }}>
             <Link href="/pricing" style={{ color: 'var(--primary)', fontWeight: '600', fontSize: '13px' }}>View Pricing</Link>
@@ -405,8 +407,8 @@ export default function Dashboard() {
           </button>
 
           <div className={styles.userMenuContainer}>
-            <button 
-              className={styles.avatarBtn} 
+            <button
+              className={styles.avatarBtn}
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
             >
               {session?.user?.image ? (
@@ -423,17 +425,25 @@ export default function Dashboard() {
             </button>
 
             {isUserMenuOpen && (
-              <div className={styles.dropdown} onClick={() => setIsUserMenuOpen(false)}>
+              <div className={styles.dropdown}>
                 <div className={styles.dropdownHeader}>
                   <span className={styles.userName}>{session?.user?.name}</span>
                   <span className={styles.userEmail}>{session?.user?.email}</span>
                 </div>
                 
-                <Link href="/pricing" className={styles.dropdownItem}>
+                <Link 
+                  href="/pricing" 
+                  className={styles.dropdownItem}
+                  onClick={() => setIsUserMenuOpen(false)}
+                >
                   <Zap size={15} /> Pricing & Plans
                 </Link>
                 
-                <div className={styles.dropdownItem} style={{ cursor: 'default' }}>
+                <div 
+                  className={styles.dropdownItem} 
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  style={{ cursor: 'pointer' }}
+                >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
                     <ThemeToggle /> Theme Mode
                   </div>
@@ -441,7 +451,14 @@ export default function Dashboard() {
 
                 <div className={styles.dropdownSeparator} />
                 
-                <button className={styles.dropdownItem} onClick={() => signOut()} style={{ color: '#ef4444' }}>
+                <button 
+                  className={styles.dropdownItem} 
+                  onClick={() => {
+                    setIsUserMenuOpen(false);
+                    signOut();
+                  }} 
+                  style={{ color: '#ef4444' }}
+                >
                   <LogOut size={15} /> Sign out
                 </button>
               </div>
@@ -463,7 +480,7 @@ export default function Dashboard() {
           </div>
           <div className={styles.statItem}>
             <FileText size={16} />
-            <span><strong>GA4</strong> data · Last 30 days</span>
+            <span><strong>GA4</strong> data · Lasts 30 days</span>
           </div>
         </div>
       )}
@@ -501,24 +518,24 @@ export default function Dashboard() {
                   placeholder="e.g. 123456789 (numeric ID only)"
                   required
                 />
-                
+
                 {/* Restorable ID List (Identity Lock Transparency) */}
                 {usedSlotsList.length > 0 && (
                   <div style={{ marginTop: '12px', background: 'var(--secondary)', padding: '10px', borderRadius: '8px', fontSize: '11px' }}>
                     <p style={{ fontWeight: '600', marginBottom: '8px', color: 'var(--muted)' }}>RESTorable IDs (Click to pre-fill):</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                       {usedSlotsList.map(item => (
-                        <button 
-                          key={item.id} 
+                        <button
+                          key={item.id}
                           type="button"
                           onClick={() => {
                             setNewClientName(item.name);
                             setNewClientProp(item.id);
                           }}
-                          style={{ 
-                            background: 'var(--background)', 
-                            padding: '4px 8px', 
-                            borderRadius: '4px', 
+                          style={{
+                            background: 'var(--background)',
+                            padding: '4px 8px',
+                            borderRadius: '4px',
                             border: '1px solid var(--border)',
                             color: 'var(--primary)',
                             cursor: 'pointer',
@@ -589,7 +606,7 @@ export default function Dashboard() {
             <div className={styles.modalBody} style={{ padding: '32px 24px' }}>
               {usedSlotsList.length > 0 && (
                 <div style={{ marginBottom: '20px', padding: '12px', background: 'var(--secondary)', borderRadius: '12px', fontSize: '13px', color: 'var(--muted)' }}>
-                  Slots currently used for: <br/> 
+                  Slots currently used for: <br />
                   <strong style={{ color: 'var(--primary)' }}>{usedSlotsList.map(i => i.name).join(', ')}</strong>
                 </div>
               )}
@@ -602,10 +619,10 @@ export default function Dashboard() {
                   The <strong>Starter Plan</strong> is limited to 5 clients. Switch to the <strong>Agency Plan</strong> to manage unlimited clients and unlock advanced AI features.
                 </p>
               </div>
-              
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <button 
-                  className="btn-primary" 
+                <button
+                  className="btn-primary"
                   style={{ background: 'var(--primary)', color: 'white', padding: '14px' }}
                   onClick={() => {
                     setIsLimitModalOpen(false);
@@ -614,8 +631,8 @@ export default function Dashboard() {
                 >
                   Upgrade to Agency
                 </button>
-                <button 
-                  className="btn-secondary" 
+                <button
+                  className="btn-secondary"
                   onClick={() => setIsLimitModalOpen(false)}
                   style={{ padding: '12px' }}
                 >
@@ -643,7 +660,7 @@ export default function Dashboard() {
               <p style={{ textAlign: 'center', color: 'var(--muted)', marginBottom: '32px', fontSize: '14px' }}>
                 You&apos;re on a 7-day free trial. To add more clients, pick the plan that fits your agency:
               </p>
-              
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '32px' }}>
                 {/* Starter Plan */}
                 <div style={{ padding: '24px', border: '1px solid var(--border)', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '12px', background: 'var(--card-bg)' }}>
@@ -653,8 +670,8 @@ export default function Dashboard() {
                     <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#16a34a" /> Up to 5 clients</li>
                     <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#16a34a" /> + All core features</li>
                   </ul>
-                  <button 
-                    className="btn-primary" 
+                  <button
+                    className="btn-primary"
                     style={{ marginTop: 'auto', padding: '12px', fontSize: '13px' }}
                     onClick={() => {
                       setIsTrialModalOpen(false);
@@ -664,7 +681,7 @@ export default function Dashboard() {
                     Choose Starter
                   </button>
                 </div>
-                
+
                 {/* Agency Plan */}
                 <div style={{ padding: '24px', border: '2px solid var(--primary)', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '12px', background: 'color-mix(in srgb, var(--primary) 5%, transparent)', position: 'relative' }}>
                   <div style={{ position: 'absolute', top: '-12px', right: '12px', background: 'var(--primary)', color: 'white', fontSize: '10px', fontWeight: '700', padding: '4px 10px', borderRadius: '20px' }}>RECOMMENDED</div>
@@ -674,8 +691,8 @@ export default function Dashboard() {
                     <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#16a34a" /> Unlimited clients</li>
                     <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#16a34a" /> + White-label reports</li>
                   </ul>
-                  <button 
-                    className="btn-primary" 
+                  <button
+                    className="btn-primary"
                     style={{ marginTop: 'auto', padding: '12px', fontSize: '13px', background: 'var(--primary)', color: 'white' }}
                     onClick={() => {
                       setIsTrialModalOpen(false);
@@ -689,9 +706,9 @@ export default function Dashboard() {
 
               <div style={{ textAlign: 'center' }}>
                 <p style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '16px' }}>
-                   Already love it? Your trial ends in <strong>{trialDaysRemaining ?? 7} days</strong>.
+                  Already love it? Your trial ends in <strong>{trialDaysRemaining ?? 7} days</strong>.
                 </p>
-                <button 
+                <button
                   onClick={() => setIsTrialModalOpen(false)}
                   style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '12px', textDecoration: 'underline', cursor: 'pointer' }}
                 >

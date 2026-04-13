@@ -533,11 +533,12 @@
 .freeBadge {
   font-size: 10px;
   font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 12px;
-  background: var(--secondary);
-  color: var(--muted);
-  border: 1px solid var(--border);
+  padding: 3px 10px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  color: var(--primary);
+  border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
+  letter-spacing: 0.05em;
 }
 
 .mainHeader {
