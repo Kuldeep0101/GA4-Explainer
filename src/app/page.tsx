@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Plus, FileText, X, Users, TrendingUp, Zap, LogOut, LogIn, CheckCircle, Clock } from 'lucide-react';
 import { useSession, signIn, signOut } from 'next-auth/react';
@@ -35,6 +35,22 @@ export default function Dashboard() {
   const [archivedClients, setArchivedClients] = useState<any[]>([]);
   const [usedSlotsList, setUsedSlotsList] = useState<{ name: string, id: string }[]>([]);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Click-away listener for user menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+    if (isUserMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isUserMenuOpen]);
 
   // ── Database Sync (Supabase) ───────────────────────────
   useEffect(() => {
@@ -406,7 +422,7 @@ export default function Dashboard() {
             Add Client
           </button>
 
-          <div className={styles.userMenuContainer}>
+          <div className={styles.userMenuContainer} ref={menuRef}>
             <button
               className={styles.avatarBtn}
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
