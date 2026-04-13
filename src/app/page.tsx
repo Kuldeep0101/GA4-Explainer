@@ -13,6 +13,7 @@ interface Client {
   name: string;
   propertyId: string;
   lastReport: string;
+  hasGeneratedReport: boolean;
 }
 
 export default function Dashboard() {
@@ -82,7 +83,8 @@ export default function Dashboard() {
           id: c.id,
           name: c.name,
           propertyId: c.property_id,
-          lastReport: c.last_report || 'Never'
+          lastReport: c.last_report || 'Never',
+          hasGeneratedReport: c.has_generated_report || false
         }));
         setClients(mappedClients);
       } else {
@@ -99,7 +101,8 @@ export default function Dashboard() {
             id: insertedDemo[0].id,
             name: insertedDemo[0].name,
             propertyId: insertedDemo[0].property_id,
-            lastReport: insertedDemo[0].last_report
+            lastReport: insertedDemo[0].last_report,
+            hasGeneratedReport: false
           }]);
         }
       }
@@ -225,7 +228,8 @@ export default function Dashboard() {
       id: c.id,
       name: c.name,
       propertyId: c.property_id,
-      lastReport: c.last_report || 'Never'
+      lastReport: c.last_report || 'Never',
+      hasGeneratedReport: c.has_generated_report || false
     })) || []);
 
     setIsModalOpen(false);
@@ -457,6 +461,19 @@ export default function Dashboard() {
                   placeholder="e.g. 123456789 (numeric ID only)"
                   required
                 />
+                
+                {/* Restorable ID List (Identity Lock Transparency) */}
+                {usedSlotsList.length > 0 && (
+                  <div style={{ marginTop: '12px', background: 'var(--secondary)', padding: '10px', borderRadius: '8px', fontSize: '11px' }}>
+                    <p style={{ fontWeight: '600', marginBottom: '4px', color: 'var(--muted)' }}>RESTorable IDs (Free):</p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {usedSlotsList.map(name => (
+                        <span key={name} style={{ background: 'var(--background)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border)' }}>{name}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <p style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '6px' }}>
                   Find this in GA4 → Admin → Property Settings → Property ID
                 </p>
@@ -641,7 +658,14 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <h2 className={styles.clientName}>{client.name}</h2>
-                  <span className={styles.status}>Active</span>
+                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                    <span className={styles.status}>Active</span>
+                    {client.hasGeneratedReport && (
+                      <span style={{ fontSize: '10px', background: 'color-mix(in srgb, #16a34a 10%, transparent)', color: '#16a34a', padding: '2px 6px', borderRadius: '4px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                        <CheckCircle size={10} /> Saved Slot
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className={styles.clientMeta}>
