@@ -31,7 +31,7 @@ export default function Dashboard() {
   const [trialDaysRemaining, setTrialDaysRemaining] = useState<number | null>(null);
   const [isTrialModalOpen, setIsTrialModalOpen] = useState(false);
   const [archivedClients, setArchivedClients] = useState<any[]>([]);
-  const [usedSlotsList, setUsedSlotsList] = useState<string[]>([]);
+  const [usedSlotsList, setUsedSlotsList] = useState<{name: string, id: string}[]>([]);
 
   // ── Database Sync (Supabase) ───────────────────────────
   useEffect(() => {
@@ -117,15 +117,22 @@ export default function Dashboard() {
       
       setArchivedClients(archived || []);
 
-      // 5. Calculate unique slots for the modal
+      // 5. Calculate unique slots for the modal (Identity Lock)
       const { data: allProps } = await supabase
         .from('clients')
         .select('property_id, name')
         .eq('user_email', email)
-        .filter('has_generated_report', 'eq', true);
+        .eq('has_generated_report', true);
       
-      const uniqueNames = Array.from(new Set(allProps?.map(p => p.name || p.property_id) || []));
-      setUsedSlotsList(uniqueNames);
+      // Get unique IDs only
+      const uniqueMap = new Map();
+      allProps?.forEach(p => uniqueMap.set(p.property_id, p.name));
+      
+      const uniqueList = Array.from(uniqueMap.entries()).map(([id, name]) => ({
+        id,
+        name: name || id
+      }));
+      setUsedSlotsList(uniqueList);
 
       setMounted(true);
     };
@@ -195,10 +202,13 @@ export default function Dashboard() {
           .eq('user_email', email)
           .eq('property_id', cleanPropId);
 
-      if (restoreError) {
-        alert("Error restoring client");
-        return;
-      }
+        if (restoreError) {
+          alert("Error restoring client");
+          return;
+        }
+        
+        // Remove from archived locally for instant UI update
+        setArchivedClients(prev => prev.filter(c => c.property_id !== cleanPropId));
       } else if (!isAlreadyInSystem) {
         // Add brand new client
         const { error: insertError } = await supabase
@@ -238,6 +248,9 @@ export default function Dashboard() {
   };
 
   const handleDelete = async (id: string) => {
+    // Find the client to move to archive locally
+    const clientToArchive = clients.find(c => c.id === id);
+
     // Identity-Based Logic: Soft delete to keep the slot "locked" if it has a report
     const { error } = await supabase
       .from('clients')
@@ -246,6 +259,15 @@ export default function Dashboard() {
 
     if (!error) {
       setClients(prev => prev.filter(c => c.id !== id));
+      
+      // Dynamic Update: If this client had a report, move it to archived state instantly
+      if (clientToArchive?.hasGeneratedReport) {
+        setArchivedClients(prev => [{
+          ...clientToArchive,
+          property_id: clientToArchive.propertyId,
+          last_report: clientToArchive.lastReport
+        }, ...prev]);
+      }
     }
     setDeleteId(null);
     
@@ -465,10 +487,30 @@ export default function Dashboard() {
                 {/* Restorable ID List (Identity Lock Transparency) */}
                 {usedSlotsList.length > 0 && (
                   <div style={{ marginTop: '12px', background: 'var(--secondary)', padding: '10px', borderRadius: '8px', fontSize: '11px' }}>
-                    <p style={{ fontWeight: '600', marginBottom: '4px', color: 'var(--muted)' }}>RESTorable IDs (Free):</p>
+                    <p style={{ fontWeight: '600', marginBottom: '8px', color: 'var(--muted)' }}>RESTorable IDs (Click to pre-fill):</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                      {usedSlotsList.map(name => (
-                        <span key={name} style={{ background: 'var(--background)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border)' }}>{name}</span>
+                      {usedSlotsList.map(item => (
+                        <button 
+                          key={item.id} 
+                          type="button"
+                          onClick={() => {
+                            setNewClientName(item.name);
+                            setNewClientProp(item.id);
+                          }}
+                          style={{ 
+                            background: 'var(--background)', 
+                            padding: '4px 8px', 
+                            borderRadius: '4px', 
+                            border: '1px solid var(--border)',
+                            color: 'var(--primary)',
+                            cursor: 'pointer',
+                            fontSize: '11px',
+                            fontWeight: '500'
+                          }}
+                          title={`Restore ${item.name}`}
+                        >
+                          {item.name}
+                        </button>
                       ))}
                     </div>
                   </div>
