@@ -1,6 +1,6 @@
 .pricingPage {
   min-height: 100vh;
-  padding: 48px 24px 80px;
+  padding: 40px 20px 80px;
   background: var(--background);
 }
 
@@ -213,9 +213,11 @@
     grid-template-columns: 1fr;
     gap: 40px;
   }
+
   .featuredCard {
     transform: none;
   }
+
   .featuredCard:hover {
     transform: translateY(-4px);
   }
