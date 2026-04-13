@@ -427,19 +427,28 @@ export default function Dashboard() {
           {/* How It Works Grid */}
           <div className={styles.howItWorksGrid}>
             <div>
-              <div style={{ background: 'var(--secondary)', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px', fontSize: '12px', fontWeight: '800' }}>1</div>
-              <p style={{ fontSize: '13px', fontWeight: '700', marginBottom: '4px' }}>Add Client ID</p>
-              <p style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.4' }}>Read-only property ID. No passwords needed.</p>
+              <div style={{ background: 'var(--secondary)', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px', fontSize: '12px', fontWeight: '800' }}>1</div>
+              <p style={{ fontSize: '14px', fontWeight: '700', marginBottom: '6px' }}>Connect your clients&apos; GA4</p>
+              <p style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.6', marginBottom: '8px' }}>
+                Sign in with Google and add property IDs. We only request read-only access—we can never change any data.
+              </p>
+              <p style={{ fontSize: '11px', fontStyle: 'italic', color: 'var(--primary)', fontWeight: '500' }}>&ldquo;Finally — a tool that doesn&apos;t need my clients&apos; passwords.&rdquo;</p>
             </div>
             <div>
-              <div style={{ background: 'var(--secondary)', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px', fontSize: '12px', fontWeight: '800' }}>2</div>
-              <p style={{ fontSize: '13px', fontWeight: '700', marginBottom: '4px' }}>AI Generation</p>
-              <p style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.4' }}>AI writes a plain-English performance summary.</p>
+              <div style={{ background: 'var(--secondary)', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px', fontSize: '12px', fontWeight: '800' }}>2</div>
+              <p style={{ fontSize: '14px', fontWeight: '700', marginBottom: '6px' }}>AI Performance Summary</p>
+              <p style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.6', marginBottom: '8px' }}>
+                Choose 7, 30, or 90 days. Our AI writes a plain-English summary of what happened and what it means for your client.
+              </p>
+              <p style={{ fontSize: '11px', fontStyle: 'italic', color: 'var(--primary)', fontWeight: '500' }}>&ldquo;It explains bounce rate without me having to explain bounce rate.&rdquo;</p>
             </div>
             <div>
-              <div style={{ background: 'var(--secondary)', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px', fontSize: '12px', fontWeight: '800' }}>3</div>
-              <p style={{ fontSize: '13px', fontWeight: '700', marginBottom: '4px' }}>Direct PDF</p>
-              <p style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.4' }}>Professional export ready to forward to clients.</p>
+              <div style={{ background: 'var(--secondary)', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px', fontSize: '12px', fontWeight: '800' }}>3</div>
+              <p style={{ fontSize: '14px', fontWeight: '700', marginBottom: '6px' }}>Download and send</p>
+              <p style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.6', marginBottom: '8px' }}>
+                Exports a professional PDF. Forward it directly—no client login required, no confusing dashboards.
+              </p>
+              <p style={{ fontSize: '11px', fontStyle: 'italic', color: 'var(--primary)', fontWeight: '500' }}>&ldquo;My client replied &apos;this is the clearest report I&apos;ve ever received.&apos;&rdquo;</p>
             </div>
           </div>
 
