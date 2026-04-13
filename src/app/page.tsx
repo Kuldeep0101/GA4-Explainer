@@ -19,6 +19,7 @@ export default function Dashboard() {
   const { data: session, status } = useSession();
   const [clients, setClients] = useState<Client[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLimitModalOpen, setIsLimitModalOpen] = useState(false);
   const [newClientName, setNewClientName] = useState('');
   const [newClientProp, setNewClientProp] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -131,7 +132,8 @@ export default function Dashboard() {
 
     // Plan Logic: Restrict Starter to 5 clients
     if (userPlan === 'starter' && clients.length >= 5) {
-      alert('Starter plan is limited to 5 clients. Upgrade to Agency for unlimited access!');
+      setIsModalOpen(false); // Close the 'Add' modal
+      setIsLimitModalOpen(true); // Open the 'Limit' modal
       return;
     }
     if (!session?.user?.email) return;
@@ -422,6 +424,50 @@ export default function Dashboard() {
                   onClick={() => handleDelete(deleteId)}
                 >
                   Remove
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Plan Limit Modal */}
+      {isLimitModalOpen && (
+        <div className={styles.modalOverlay} onClick={() => setIsLimitModalOpen(false)}>
+          <div className={styles.modal} style={{ maxWidth: '440px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader} style={{ justifyContent: 'center' }}>
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Zap size={20} color="#7c3aed" fill="#7c3aed" /> Limit Reached
+              </h2>
+            </div>
+            <div className={styles.modalBody} style={{ padding: '32px 24px' }}>
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ background: 'var(--secondary)', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                  <Users size={32} color="var(--primary)" />
+                </div>
+                <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '8px' }}>Move to Agency Plan</h3>
+                <p style={{ color: 'var(--muted)', fontSize: '14px', lineHeight: '1.5' }}>
+                  The **Starter Plan** is limited to 5 clients. Switch to the **Agency Plan** to manage unlimited clients and unlock advanced AI features.
+                </p>
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <button 
+                  className="btn-primary" 
+                  style={{ background: 'var(--primary)', color: 'white', padding: '14px' }}
+                  onClick={() => {
+                    setIsLimitModalOpen(false);
+                    handleUpgrade('agency');
+                  }}
+                >
+                  Upgrade to Agency
+                </button>
+                <button 
+                  className="btn-secondary" 
+                  onClick={() => setIsLimitModalOpen(false)}
+                  style={{ padding: '12px' }}
+                >
+                  Maybe later
                 </button>
               </div>
             </div>

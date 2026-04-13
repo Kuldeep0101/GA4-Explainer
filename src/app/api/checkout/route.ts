@@ -57,7 +57,7 @@ export async function POST(request: Request) {
         product_id: targetProductId, // Silently swaps price depending on IP trace
         quantity: 1, // Required by Dodo API
         payment_link: true,
-        return_url: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/?success=true`
+        return_url: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/?success=true&plan=${plan}`
       })
     });
 
