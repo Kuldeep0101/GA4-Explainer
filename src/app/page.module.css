@@ -546,3 +546,83 @@
   align-items: center;
   gap: 12px;
 }
+
+/* --- Welcome Modal (Early Stage) --- */
+.welcomeOverlay {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 2000;
+  animation: slideLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideLeft {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.welcomeCard {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 24px;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  max-width: 340px;
+  backdrop-filter: blur(12px);
+}
+
+.welcomeTitle {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary);
+}
+
+.welcomeText {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.welcomeBtn {
+  width: 100%;
+  padding: 10px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.welcomeBtn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+/* --- Glowing Feature Text --- */
+.comingSoonGlow {
+  font-size: 11px;
+  font-weight: 700;
+  color: #7c3aed;
+  background: rgba(124, 58, 237, 0.1);
+  padding: 2px 8px;
+  border-radius: 6px;
+  animation: pulseGlow 2s infinite ease-in-out;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid rgba(124, 58, 237, 0.2);
+}
+
+@keyframes pulseGlow {
+  0% { opacity: 0.6; box-shadow: 0 0 0px rgba(124, 58, 237, 0); }
+  50% { opacity: 1; box-shadow: 0 0 10px rgba(124, 58, 237, 0.3); }
+  100% { opacity: 0.6; box-shadow: 0 0 0px rgba(124, 58, 237, 0); }
+}

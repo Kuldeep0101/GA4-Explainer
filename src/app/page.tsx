@@ -35,6 +35,7 @@ export default function Dashboard() {
   const [archivedClients, setArchivedClients] = useState<any[]>([]);
   const [usedSlotsList, setUsedSlotsList] = useState<{ name: string, id: string }[]>([]);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Click-away listener for user menu
@@ -51,6 +52,23 @@ export default function Dashboard() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isUserMenuOpen]);
+
+  // Welcome Modal Logic
+  useEffect(() => {
+    if (status === 'authenticated') {
+      const hasShown = sessionStorage.getItem('welcome_shown');
+      if (!hasShown) {
+        const timer = setTimeout(() => {
+          setIsWelcomeOpen(true);
+          sessionStorage.setItem('welcome_shown', 'true');
+          
+          // Auto-close after 4 seconds
+          setTimeout(() => setIsWelcomeOpen(false), 4500); 
+        }, 3500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [status]);
 
   // ── Database Sync (Supabase) ───────────────────────────
   useEffect(() => {
@@ -507,6 +525,10 @@ export default function Dashboard() {
             <FileText size={16} />
             <span><strong>GA4</strong> data · Lasts 30 days</span>
           </div>
+
+          <div className={styles.comingSoonGlow}>
+            <Zap size={10} fill="currentColor" /> More features coming soon...
+          </div>
         </div>
       )}
 
@@ -861,6 +883,26 @@ export default function Dashboard() {
           Terms of Service
         </Link>
       </footer>
+
+      {/* Early Access Welcome Modal */}
+      {isWelcomeOpen && (
+        <div className={styles.welcomeOverlay}>
+          <div className={styles.welcomeCard}>
+            <div className={styles.welcomeTitle}>
+              <TrendingUp size={18} /> Early Stage Access
+            </div>
+            <p className={styles.welcomeText}>
+              GA4 Explainer is in active development. We are rolling out custom PDF branding and automated scheduling soon.
+            </p>
+            <button 
+              className={styles.welcomeBtn} 
+              onClick={() => setIsWelcomeOpen(false)}
+            >
+              Exciting, thanks!
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
