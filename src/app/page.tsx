@@ -469,7 +469,7 @@ export default function Dashboard() {
                 </div>
                 <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '8px' }}>Move to Agency Plan</h3>
                 <p style={{ color: 'var(--muted)', fontSize: '14px', lineHeight: '1.5' }}>
-                  The **Starter Plan** is limited to 5 clients. Switch to the **Agency Plan** to manage unlimited clients and unlock advanced AI features.
+                  The <strong>Starter Plan</strong> is limited to 5 clients. Switch to the <strong>Agency Plan</strong> to manage unlimited clients and unlock advanced AI features.
                 </p>
               </div>
               
