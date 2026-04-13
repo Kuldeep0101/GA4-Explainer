@@ -32,6 +32,7 @@ export default function Dashboard() {
   const [isTrialModalOpen, setIsTrialModalOpen] = useState(false);
   const [archivedClients, setArchivedClients] = useState<any[]>([]);
   const [usedSlotsList, setUsedSlotsList] = useState<{name: string, id: string}[]>([]);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   // ── Database Sync (Supabase) ───────────────────────────
   useEffect(() => {
@@ -384,54 +385,68 @@ export default function Dashboard() {
             GA4 Explainer
           </div>
           <div>
-            <h1 className={styles.title}>Your Clients</h1>
+            <div className={styles.mainHeader}>
+              <h1 className={styles.title}>Your Clients</h1>
+              {isPro ? (
+                <div className={styles.proBadge} style={{ background: userPlan === 'agency' ? 'linear-gradient(135deg, #7c3aed 0%, #5b4cf0 100%)' : undefined }}>
+                  <CheckCircle size={14} /> {userPlan === 'agency' ? 'AGENCY' : 'STARTER'} PLAN
+                </div>
+              ) : (
+                <div className={styles.freeBadge}>FREE TIER</div>
+              )}
+            </div>
             <p className={styles.subtitle}>{clients.length} {clients.length === 1 ? 'client' : 'clients'} · Click any card to generate a report</p>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {isPro ? (
-            <div className={styles.proBadge} style={{ background: userPlan === 'agency' ? 'linear-gradient(135deg, #7c3aed 0%, #5b4cf0 100%)' : undefined }}>
-              <CheckCircle size={14} /> {userPlan === 'agency' ? 'AGENCY' : 'STARTER'} PLAN
-            </div>
-          ) : (
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                className="btn-primary"
-                onClick={() => handleUpgrade('starter')}
-                disabled={isCheckoutLoading}
-                style={{ padding: '8px 12px', fontSize: '12px', background: 'var(--foreground)', color: 'var(--background)' }}
-              >
-                Starter
-              </button>
-              <button
-                className="btn-primary"
-                onClick={() => handleUpgrade('agency')}
-                disabled={isCheckoutLoading}
-                style={{ padding: '8px 12px', fontSize: '12px', background: 'var(--primary)', color: 'white' }}
-              >
-                Agency
-              </button>
-            </div>
-          )}
-          {session?.user?.image && (
-            <img
-              src={session.user.image}
-              alt={session.user.name || 'User'}
-              className={styles.userAvatar}
-              title={session.user.email || ''}
-            />
-          )}
-          <ThemeToggle />
-          <Link href="/pricing" className="btn-secondary" style={{ padding: '8px 14px', fontSize: '13px' }}>
-            Pricing
-          </Link>
-          <button className="btn-secondary" onClick={() => signOut()} title="Sign out" style={{ padding: '8px 14px', fontSize: '13px' }}>
-            <LogOut size={15} /> Sign out
-          </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
             <Plus size={18} />
             Add Client
           </button>
+
+          <div className={styles.userMenuContainer}>
+            <button 
+              className={styles.avatarBtn} 
+              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+            >
+              {session?.user?.image ? (
+                <img
+                  src={session.user.image}
+                  alt={session.user.name || 'User'}
+                  className={styles.userAvatar}
+                />
+              ) : (
+                <div className={styles.userAvatar} style={{ background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '700' }}>
+                  {session?.user?.name?.charAt(0) || 'U'}
+                </div>
+              )}
+            </button>
+
+            {isUserMenuOpen && (
+              <div className={styles.dropdown} onClick={() => setIsUserMenuOpen(false)}>
+                <div className={styles.dropdownHeader}>
+                  <span className={styles.userName}>{session?.user?.name}</span>
+                  <span className={styles.userEmail}>{session?.user?.email}</span>
+                </div>
+                
+                <Link href="/pricing" className={styles.dropdownItem}>
+                  <Zap size={15} /> Pricing & Plans
+                </Link>
+                
+                <div className={styles.dropdownItem} style={{ cursor: 'default' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
+                    <ThemeToggle /> Theme Mode
+                  </div>
+                </div>
+
+                <div className={styles.dropdownSeparator} />
+                
+                <button className={styles.dropdownItem} onClick={() => signOut()} style={{ color: '#ef4444' }}>
+                  <LogOut size={15} /> Sign out
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 

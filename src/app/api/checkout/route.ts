@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       },
       agency: {
         IN: 'pdt_0NcYmZrHJsgdVGj9dEj6L', // ₹5,999
-        GLOBAL: 'pdt_0NcYntt4U7FJzIfhP98p1' // $129 (or set global price)
+        GLOBAL: 'pdt_0NcYntt4U7FJzIfhP98p1' // $89 (or set global price)
       }
     };
 
