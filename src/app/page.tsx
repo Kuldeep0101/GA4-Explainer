@@ -341,27 +341,75 @@ export default function Dashboard() {
             GA4 Explainer
           </div>
           <h1 className={styles.signInTitle}>
-            Your clients ask &quot;How did we do?&quot; — answer them in 30 seconds.
+            Your clients don&apos;t understand GA4.<br />
+            <span style={{ color: 'var(--primary)' }}>Now they don&apos;t have to.</span>
           </h1>
           <p className={styles.signInSubtitle}>
-            Stop struggling with GA4 dashboards. Stop worrying about monthly reports. Connect your data and generate plain-English summaries your clients will actually read.
+            Connect your GA4. One click. Clean PDF. Client happy.
           </p>
 
-          {/* How It Works */}
-          <div style={{ width: '100%', margin: '20px 0', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
-            <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--primary)', marginBottom: '15px' }}>How it works</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', textAlign: 'center' }}>
-              <div>
-                <div style={{ background: 'var(--secondary)', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px', fontSize: '12px', fontWeight: '700' }}>1</div>
-                <p style={{ fontSize: '11px', fontWeight: '600' }}>Connect GA4</p>
+          {/* How It Works — Outcome Focused */}
+          <div style={{ width: '100%', margin: '30px 0', borderTop: '1px solid var(--border)', paddingTop: '30px' }}>
+            <p style={{ fontSize: '13px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--primary)', marginBottom: '24px', textAlign: 'center' }}>
+              Set up in 3 minutes. Reports in 30 seconds.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div style={{ display: 'flex', gap: '16px' }}>
+                <div style={{ background: 'var(--secondary)', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '12px', fontWeight: '700' }}>1</div>
+                <div>
+                  <p style={{ fontSize: '14px', fontWeight: '700', marginBottom: '4px' }}>Connect your clients&apos; GA4</p>
+                  <p style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: '1.5', marginBottom: '6px' }}>
+                    Sign in with Google and add property IDs. We only request read-only access—we can never change any data.
+                  </p>
+                  <p style={{ fontSize: '11px', fontStyle: 'italic', color: 'var(--primary)' }}>&ldquo;Finally — a tool that doesn&apos;t need my clients&apos; passwords.&rdquo;</p>
+                </div>
               </div>
-              <div>
-                <div style={{ background: 'var(--secondary)', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px', fontSize: '12px', fontWeight: '700' }}>2</div>
-                <p style={{ fontSize: '11px', fontWeight: '600' }}>AI Summary</p>
+
+              <div style={{ display: 'flex', gap: '16px' }}>
+                <div style={{ background: 'var(--secondary)', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '12px', fontWeight: '700' }}>2</div>
+                <div>
+                  <p style={{ fontSize: '14px', fontWeight: '700', marginBottom: '4px' }}>Click &ldquo;Generate Report&rdquo;</p>
+                  <p style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: '1.5', marginBottom: '6px' }}>
+                    Choose 7, 30, or 90 days. Our AI writes a plain-English summary of what happened and what it means for your client.
+                  </p>
+                  <p style={{ fontSize: '11px', fontStyle: 'italic', color: 'var(--primary)' }}>&ldquo;It explains bounce rate without me having to explain bounce rate.&rdquo;</p>
+                </div>
               </div>
-              <div>
-                <div style={{ background: 'var(--secondary)', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px', fontSize: '12px', fontWeight: '700' }}>3</div>
-                <p style={{ fontSize: '11px', fontWeight: '600' }}>One-Click PDF</p>
+
+              <div style={{ display: 'flex', gap: '16px' }}>
+                <div style={{ background: 'var(--secondary)', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '12px', fontWeight: '700' }}>3</div>
+                <div>
+                  <p style={{ fontSize: '14px', fontWeight: '700', marginBottom: '4px' }}>Download and send</p>
+                  <p style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: '1.5', marginBottom: '6px' }}>
+                    Exports a professional PDF. Forward it directly—no client login required, no confusing dashboards.
+                  </p>
+                  <p style={{ fontSize: '11px', fontStyle: 'italic', color: 'var(--primary)' }}>&ldquo;My client replied &apos;this is the clearest report I&apos;ve ever received.&apos;&rdquo;</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ textAlign: 'center', marginBottom: '12px', width: '100%' }}>
+            <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '10px' }}>Example Report Output</p>
+            <div className={styles.reportPreviewMockup}>
+              <div className={styles.reportPreviewHeader}>
+                <p style={{ fontSize: '11px', fontWeight: '800' }}>ACME CORP PERFORMANCE</p>
+                <p style={{ fontSize: '9px', opacity: 0.8 }}>LAST 30 DAYS &middot; AI GENERATED SUMMARY</p>
+              </div>
+              <div className={styles.reportPreviewBody}>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                  <div style={{ flex: 1, padding: '8px', background: 'var(--secondary)', borderRadius: '8px', textAlign: 'center' }}>
+                    <p style={{ fontSize: '9px', color: 'var(--muted)' }}>Users</p>
+                    <p style={{ fontSize: '12px', fontWeight: '700' }}>+12%</p>
+                  </div>
+                  <div style={{ flex: 1, padding: '8px', background: 'var(--secondary)', borderRadius: '8px', textAlign: 'center' }}>
+                    <p style={{ fontSize: '9px', color: 'var(--muted)' }}>Conv.</p>
+                    <p style={{ fontSize: '12px', fontWeight: '700' }}>+4.5%</p>
+                  </div>
+                </div>
+                <div className={styles.reportPreviewLine} style={{ width: '100%', opacity: 0.6 }}></div>
+                <div className={styles.reportPreviewLine} style={{ width: '90%', opacity: 0.4 }}></div>
+                <div className={styles.reportPreviewLine} style={{ width: '40%', opacity: 0.2 }}></div>
               </div>
             </div>
           </div>
@@ -379,7 +427,7 @@ export default function Dashboard() {
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
               </svg>
-              Continue with Google
+              Generate my first report free
             </button>
             <Link 
               href="/sample" 
@@ -390,7 +438,22 @@ export default function Dashboard() {
             </Link>
           </div>
 
-          <p className={styles.signInNote}>Join 10+ agencies saving 20h/month on reporting.</p>
+          <p className={styles.signInNote} style={{ marginBottom: '24px' }}>7-day free trial &middot; No credit card required</p>
+
+          <div style={{ background: 'var(--secondary)', padding: '20px', borderRadius: '16px', width: '100%', display: 'flex', flexDirection: 'column', gap: '12px', textAlign: 'left' }}>
+            <div style={{ display: 'flex', gap: '8px', fontSize: '13px', fontWeight: '600' }}>
+              <CheckCircle size={16} color="var(--primary)" /> No more &ldquo;what does this mean?&rdquo; &mdash; reports your clients actually understand
+            </div>
+            <div style={{ display: 'flex', gap: '8px', fontSize: '13px', fontWeight: '600' }}>
+              <CheckCircle size={16} color="var(--primary)" /> All your clients, one place &mdash; manage 5 or 50 agencies from one dashboard
+            </div>
+            <div style={{ display: 'flex', gap: '8px', fontSize: '13px', fontWeight: '600' }}>
+              <CheckCircle size={16} color="var(--primary)" /> Send in seconds, not hours &mdash; one-click PDF, ready to forward
+            </div>
+            <div style={{ display: 'flex', gap: '8px', fontSize: '13px', fontWeight: '600' }}>
+              <CheckCircle size={16} color="var(--primary)" /> Read-only access &mdash; we never touch your clients&apos; data, ever
+            </div>
+          </div>
           <div style={{ marginTop: '24px', textAlign: 'center', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px' }}>
             <Link href="/pricing" style={{ color: 'var(--primary)', fontWeight: '600', fontSize: '13px' }}>View Pricing</Link>
             <div style={{ width: '100%', height: '8px' }}></div>
