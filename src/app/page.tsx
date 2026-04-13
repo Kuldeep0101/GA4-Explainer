@@ -27,6 +27,8 @@ export default function Dashboard() {
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [isPro, setIsPro] = useState(false);
   const [userPlan, setUserPlan] = useState<'free' | 'starter' | 'agency'>('free'); // Multi-tier support
+  const [trialDaysRemaining, setTrialDaysRemaining] = useState<number | null>(null);
+  const [isTrialModalOpen, setIsTrialModalOpen] = useState(false);
 
   // ── Database Sync (Supabase) ───────────────────────────
   useEffect(() => {
@@ -56,8 +58,16 @@ export default function Dashboard() {
         setUserPlan(planParam);
         window.history.replaceState(null, '', window.location.pathname);
       }
+      
+      // 2. Trial Calculation (7 Days from created_at)
+      if (userRow?.created_at) {
+        const createdDate = new Date(userRow.created_at);
+        const trialEndDate = new Date(createdDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+        const diffDays = Math.max(0, Math.ceil((trialEndDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
+        setTrialDaysRemaining(diffDays);
+      }
 
-      // 2. Fetch Clients for this user
+      // 3. Fetch Clients for this user
       const { data: clientsData, error } = await supabase
         .from('clients')
         .select('*')
@@ -129,6 +139,13 @@ export default function Dashboard() {
   const handleAddClient = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newClientName || !newClientProp) return;
+
+    // Plan Logic: 2-Client Free Trial Limit
+    if (userPlan === 'free' && clients.length >= 2) {
+      setIsModalOpen(false);
+      setIsTrialModalOpen(true);
+      return;
+    }
 
     // Plan Logic: Restrict Starter to 5 clients
     if (userPlan === 'starter' && clients.length >= 5) {
@@ -468,6 +485,77 @@ export default function Dashboard() {
                   style={{ padding: '12px' }}
                 >
                   Maybe later
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Trial Limit Modal */}
+      {isTrialModalOpen && (
+        <div className={styles.modalOverlay} onClick={() => setIsTrialModalOpen(false)}>
+          <div className={styles.modal} style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 style={{ width: '100%', textAlign: 'center', fontSize: '20px' }}>You&apos;ve reached the free trial limit (2 clients)</h2>
+            </div>
+            <div className={styles.modalBody} style={{ padding: '32px 24px' }}>
+              <p style={{ textAlign: 'center', color: 'var(--muted)', marginBottom: '32px', fontSize: '14px' }}>
+                You&apos;re on a 7-day free trial. To add more clients, pick the plan that fits your agency:
+              </p>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '32px' }}>
+                {/* Starter Plan */}
+                <div style={{ padding: '24px', border: '1px solid var(--border)', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '12px', background: 'var(--card-bg)' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: '700' }}>Starter</h3>
+                  <p style={{ fontSize: '20px', fontWeight: '800', color: 'var(--primary)' }}>₹2,999/mo</p>
+                  <ul style={{ padding: 0, margin: 0, listStyle: 'none', fontSize: '13px', color: 'var(--muted)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#16a34a" /> Up to 5 clients</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#16a34a" /> + All core features</li>
+                  </ul>
+                  <button 
+                    className="btn-primary" 
+                    style={{ marginTop: 'auto', padding: '12px', fontSize: '13px' }}
+                    onClick={() => {
+                      setIsTrialModalOpen(false);
+                      handleUpgrade('starter');
+                    }}
+                  >
+                    Choose Starter
+                  </button>
+                </div>
+                
+                {/* Agency Plan */}
+                <div style={{ padding: '24px', border: '2px solid var(--primary)', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '12px', background: 'color-mix(in srgb, var(--primary) 5%, transparent)', position: 'relative' }}>
+                  <div style={{ position: 'absolute', top: '-12px', right: '12px', background: 'var(--primary)', color: 'white', fontSize: '10px', fontWeight: '700', padding: '4px 10px', borderRadius: '20px' }}>RECOMMENDED</div>
+                  <h3 style={{ fontSize: '18px', fontWeight: '700' }}>Agency</h3>
+                  <p style={{ fontSize: '20px', fontWeight: '800', color: 'var(--primary)' }}>₹5,999/mo</p>
+                  <ul style={{ padding: 0, margin: 0, listStyle: 'none', fontSize: '13px', color: 'var(--muted)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#16a34a" /> Unlimited clients</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#16a34a" /> + White-label reports</li>
+                  </ul>
+                  <button 
+                    className="btn-primary" 
+                    style={{ marginTop: 'auto', padding: '12px', fontSize: '13px', background: 'var(--primary)', color: 'white' }}
+                    onClick={() => {
+                      setIsTrialModalOpen(false);
+                      handleUpgrade('agency');
+                    }}
+                  >
+                    Choose Agency
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '16px' }}>
+                   Already love it? Your trial ends in <strong>{trialDaysRemaining ?? 7} days</strong>.
+                </p>
+                <button 
+                  onClick={() => setIsTrialModalOpen(false)}
+                  style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '12px', textDecoration: 'underline', cursor: 'pointer' }}
+                >
+                  Continue with current plan
                 </button>
               </div>
             </div>
