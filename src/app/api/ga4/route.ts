@@ -139,14 +139,17 @@ export async function GET(request: Request) {
         orderBys: [{ metric: { metricName: 'totalUsers' }, desc: true }],
         limit: 3,
       }),
-      // Conversions by event
+      // Conversions and Key Events by event name
       analyticsDataClient.runReport({
         property,
         dateRanges: [{ startDate: currentStartDate, endDate: currentEndDate }],
         dimensions: [{ name: 'eventName' }],
-        metrics: [{ name: 'conversions' }],
-        orderBys: [{ metric: { metricName: 'conversions' }, desc: true }],
-        limit: 5,
+        metrics: [
+          { name: 'conversions' },
+          { name: 'eventCount' }
+        ],
+        orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
+        limit: 10,
       }),
     ]);
 
@@ -207,17 +210,37 @@ export async function GET(request: Request) {
       .map(row => `${row.dimensionValues?.[0]?.value || '?'} (${row.metricValues?.[0]?.value || '0'})`)
       .join(', ');
 
-    // Parse conversions
+    // Parse conversions (using both official 'conversions' and 'eventCount' for likely success events)
+    const LIKELY_CONVERSION_EVENTS = [
+      'purchase', 'generate_lead', 'lead', 'sign_up', 'signup', 
+      'contact', 'submit_form', 'form_submit', 'request_quote', 
+      'add_to_cart', 'search_results'
+    ];
+
     const conversions = (convResponse.rows || [])
-      .filter(row => {
-        const ev = row.dimensionValues?.[0]?.value || '';
-        // Filter out generic events that aren't meaningful conversions
-        return !['session_start', 'first_visit', 'page_view', 'user_engagement'].includes(ev);
+      .map(row => {
+        const eventName = row.dimensionValues?.[0]?.value || 'unknown';
+        const officialConvCount = parseInt(row.metricValues?.[0]?.value || '0');
+        const rawEventCount = parseInt(row.metricValues?.[1]?.value || '0');
+        
+        // If it's a 'likely' conversion event, use the raw count if official count is zero
+        const effectiveCount = (officialConvCount > 0) 
+          ? officialConvCount 
+          : (LIKELY_CONVERSION_EVENTS.includes(eventName.toLowerCase()) ? rawEventCount : 0);
+
+        return {
+          eventName,
+          count: String(effectiveCount),
+          isOfficial: officialConvCount > 0
+        };
       })
-      .map(row => ({
-        eventName: row.dimensionValues?.[0]?.value || 'unknown',
-        count: row.metricValues?.[0]?.value || '0',
-      }));
+      .filter(c => {
+        // Filter out noise: only show official conversions or likely successes with > 0 count
+        const isNoise = ['session_start', 'first_visit', 'page_view', 'user_engagement'].includes(c.eventName);
+        return !isNoise && parseInt(c.count) > 0;
+      })
+      .sort((a, b) => parseInt(b.count) - parseInt(a.count))
+      .slice(0, 5);
 
     return NextResponse.json({
       propertyId,
