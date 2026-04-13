@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, FileText, X, Users, TrendingUp, Zap, LogOut, LogIn, CheckCircle } from 'lucide-react';
+import { Plus, FileText, X, Users, TrendingUp, Zap, LogOut, LogIn, CheckCircle, Clock } from 'lucide-react';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { supabase } from '@/lib/supabase';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -29,6 +29,8 @@ export default function Dashboard() {
   const [userPlan, setUserPlan] = useState<'free' | 'starter' | 'agency'>('free'); // Multi-tier support
   const [trialDaysRemaining, setTrialDaysRemaining] = useState<number | null>(null);
   const [isTrialModalOpen, setIsTrialModalOpen] = useState(false);
+  const [archivedClients, setArchivedClients] = useState<any[]>([]);
+  const [usedSlotsList, setUsedSlotsList] = useState<string[]>([]);
 
   // ── Database Sync (Supabase) ───────────────────────────
   useEffect(() => {
@@ -67,11 +69,12 @@ export default function Dashboard() {
         setTrialDaysRemaining(diffDays);
       }
 
-      // 3. Fetch Clients for this user
-      const { data: clientsData, error } = await supabase
+      // 3. Fetch Active Clients for this user
+      const { data: clientsData } = await supabase
         .from('clients')
         .select('*')
         .eq('user_email', email)
+        .eq('is_deleted', false)
         .order('created_at', { ascending: false });
 
       if (clientsData && clientsData.length > 0) {
@@ -100,6 +103,27 @@ export default function Dashboard() {
           }]);
         }
       }
+
+      // 4. Fetch Archived (Soft-deleted) Clients that have reports
+      const { data: archived } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('user_email', email)
+        .eq('is_deleted', true)
+        .eq('has_generated_report', true);
+      
+      setArchivedClients(archived || []);
+
+      // 5. Calculate unique slots for the modal
+      const { data: allProps } = await supabase
+        .from('clients')
+        .select('property_id, name')
+        .eq('user_email', email)
+        .filter('has_generated_report', 'eq', true);
+      
+      const uniqueNames = Array.from(new Set(allProps?.map(p => p.name || p.property_id) || []));
+      setUsedSlotsList(uniqueNames);
+
       setMounted(true);
     };
 
@@ -138,66 +162,89 @@ export default function Dashboard() {
 
   const handleAddClient = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newClientName || !newClientProp) return;
-
-    // Plan Logic: 2-Client Free Trial Limit
-    if (userPlan === 'free' && clients.length >= 2) {
-      setIsModalOpen(false);
-      setIsTrialModalOpen(true);
-      return;
-    }
-
-    // Plan Logic: Restrict Starter to 5 clients
-    if (userPlan === 'starter' && clients.length >= 5) {
-      setIsModalOpen(false); // Close the 'Add' modal
-      setIsLimitModalOpen(true); // Open the 'Limit' modal
-      return;
-    }
     if (!session?.user?.email) return;
-
-    // Close modal & reset fast for good UX
-    setIsModalOpen(false);
-
+    const email = session.user.email;
     const cleanPropId = newClientProp.replace('properties/', '').trim();
 
-    // Create DB record
-    const newClientPayload = {
-      user_email: session.user.email,
-      name: newClientName.trim(),
-      property_id: cleanPropId,
-      last_report: 'Never'
-    };
+    // Identity-Based Slot Logic
+    const { data: allUsedProps } = await supabase
+      .from('clients')
+      .select('property_id, is_deleted, has_generated_report')
+      .eq('user_email', email);
+    
+    const uniqueUsedIds = new Set(allUsedProps?.filter(c => !c.is_deleted || c.has_generated_report).map(c => c.property_id));
+    const isAlreadyInSystem = allUsedProps?.find(c => c.property_id === cleanPropId);
 
-    // Optimistic UI update while saving
-    const tempId = `temp-${Date.now()}`;
-    setClients([{ id: tempId, name: newClientPayload.name, propertyId: cleanPropId, lastReport: 'Never' }, ...clients]);
+    const limit = userPlan === 'agency' ? 999999 : (userPlan === 'starter' ? 5 : 2);
+    
+    if (!isAlreadyInSystem && uniqueUsedIds.size >= limit) {
+      setIsModalOpen(false);
+      if (userPlan === 'free') setIsTrialModalOpen(true);
+      else setIsLimitModalOpen(true);
+      return;
+    }
 
+      if (isAlreadyInSystem && isAlreadyInSystem.is_deleted) {
+        // Tweak Logic: Re-activate old property ID without consuming a new slot
+        const { error: restoreError } = await supabase
+          .from('clients')
+          .update({ is_deleted: false, name: newClientName })
+          .eq('user_email', email)
+          .eq('property_id', cleanPropId);
+
+      if (restoreError) {
+        alert("Error restoring client");
+        return;
+      }
+      } else if (!isAlreadyInSystem) {
+        // Add brand new client
+        const { error: insertError } = await supabase
+          .from('clients')
+          .insert([{ 
+            user_email: email, 
+            name: newClientName, 
+            property_id: cleanPropId,
+            has_generated_report: false 
+          }]);
+
+      if (insertError) {
+        alert("Error adding client");
+        return;
+      }
+    }
+
+    // Refresh list
+    const { data: refreshed } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('user_email', email)
+      .eq('is_deleted', false)
+      .order('created_at', { ascending: false });
+    
+    setClients(refreshed?.map(c => ({
+      id: c.id,
+      name: c.name,
+      propertyId: c.property_id,
+      lastReport: c.last_report || 'Never'
+    })) || []);
+
+    setIsModalOpen(false);
     setNewClientName('');
     setNewClientProp('');
-
-    const { data, error } = await supabase.from('clients').insert([newClientPayload]).select();
-
-    if (data && !error) {
-      // Swap temp ID with real DB UUID
-      setClients(prev => prev.map(c => c.id === tempId ? {
-        id: data[0].id,
-        name: data[0].name,
-        propertyId: data[0].property_id,
-        lastReport: data[0].last_report
-      } : c));
-    }
   };
 
   const handleDelete = async (id: string) => {
-    // Optimistic UI update
-    setClients(prev => prev.filter(c => c.id !== id));
-    setDeleteId(null);
-
+    // Identity-Based Logic: Soft delete to keep the slot "locked" if it has a report
     const { error } = await supabase
       .from('clients')
-      .delete()
+      .update({ is_deleted: true, deleted_at: new Date().toISOString() })
       .eq('id', id);
 
+    if (!error) {
+      setClients(prev => prev.filter(c => c.id !== id));
+    }
+    setDeleteId(null);
+    
     if (error) {
       console.error('Error deleting client:', error);
       alert('Failed to delete client. Please refresh and try again.');
@@ -504,6 +551,11 @@ export default function Dashboard() {
             <div className={styles.modalHeader}>
               <h2 style={{ width: '100%', textAlign: 'center', fontSize: '20px' }}>You&apos;ve reached the free trial limit (2 clients)</h2>
             </div>
+            {usedSlotsList.length > 0 && (
+              <div style={{ padding: '0 24px', textAlign: 'center', color: 'var(--muted)', fontSize: '13px' }}>
+                Slots already used for: <strong>{usedSlotsList.join(', ')}</strong>
+              </div>
+            )}
             <div className={styles.modalBody} style={{ padding: '32px 24px' }}>
               <p style={{ textAlign: 'center', color: 'var(--muted)', marginBottom: '32px', fontSize: '14px' }}>
                 You&apos;re on a 7-day free trial. To add more clients, pick the plan that fits your agency:
@@ -623,6 +675,50 @@ export default function Dashboard() {
           ))
         )}
       </div>
+
+      {/* Archived / History Section */}
+      {archivedClients.length > 0 && (
+        <div style={{ marginTop: '60px', borderTop: '1px solid var(--border)', paddingTop: '40px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px', opacity: 0.8 }}>
+            <Clock size={20} color="var(--muted)" />
+            <h2 style={{ fontSize: '18px', color: 'var(--muted)' }}>Recently Generated Reports (Archived)</h2>
+          </div>
+          <div className={styles.grid} style={{ opacity: 0.7 }}>
+            {archivedClients.map(client => (
+              <div key={client.id} className={`card ${styles.clientCard}`} style={{ filter: 'grayscale(0.5)' }}>
+                <div className={styles.clientHeader}>
+                  <div className={styles.clientAvatar} style={{ background: 'var(--border)' }}>
+                    {client.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <h2 className={styles.clientName}>{client.name}</h2>
+                    <span className={styles.status} style={{ background: 'var(--border)', color: 'var(--muted)' }}>Archived</span>
+                  </div>
+                </div>
+                <div className={styles.clientMeta}>
+                  <div className={styles.metaRow}>
+                    <span className={styles.metaLabel}>GA4 Property</span>
+                    <code className={styles.metaValue}>{client.property_id}</code>
+                  </div>
+                  <div className={styles.metaRow}>
+                    <span className={styles.metaLabel}>Last Generated</span>
+                    <span className={styles.metaValue}>{client.last_report}</span>
+                  </div>
+                </div>
+                <div className={styles.cardActions}>
+                  <Link
+                    href={`/client/${encodeURIComponent(client.property_id)}/report?name=${encodeURIComponent(client.name)}&clientId=${client.id}`}
+                    className="btn-secondary"
+                    style={{ flex: 1, textDecoration: 'none', textAlign: 'center' }}
+                  >
+                    <FileText size={16} /> View Archived Report
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer style={{ marginTop: '60px', paddingTop: '20px', borderTop: '1px solid var(--border)', textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '20px' }}>

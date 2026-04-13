@@ -87,7 +87,10 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
         });
         await supabase
           .from('clients')
-          .update({ last_report: now })
+          .update({ 
+            last_report: now,
+            has_generated_report: true 
+          })
           .eq('id', clientId);
       }
     } catch (err: any) {
