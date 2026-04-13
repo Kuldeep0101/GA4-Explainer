@@ -118,15 +118,18 @@ export default function Dashboard() {
       setArchivedClients(archived || []);
 
       // 5. Calculate unique slots for the modal (Identity Lock)
+      // A slot is occupied if: It is Active OR it has a Generated Report
       const { data: allProps } = await supabase
         .from('clients')
-        .select('property_id, name')
-        .eq('user_email', email)
-        .eq('has_generated_report', true);
+        .select('property_id, name, is_deleted, has_generated_report')
+        .eq('user_email', email);
       
-      // Get unique IDs only
       const uniqueMap = new Map();
-      allProps?.forEach(p => uniqueMap.set(p.property_id, p.name));
+      allProps?.forEach(p => {
+        if (!p.is_deleted || p.has_generated_report) {
+          uniqueMap.set(p.property_id, p.name);
+        }
+      });
       
       const uniqueList = Array.from(uniqueMap.entries()).map(([id, name]) => ({
         id,
@@ -569,6 +572,12 @@ export default function Dashboard() {
               </h2>
             </div>
             <div className={styles.modalBody} style={{ padding: '32px 24px' }}>
+              {usedSlotsList.length > 0 && (
+                <div style={{ marginBottom: '20px', padding: '12px', background: 'var(--secondary)', borderRadius: '12px', fontSize: '13px', color: 'var(--muted)' }}>
+                  Slots currently used for: <br/> 
+                  <strong style={{ color: 'var(--primary)' }}>{usedSlotsList.map(i => i.name).join(', ')}</strong>
+                </div>
+              )}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ background: 'var(--secondary)', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                   <Users size={32} color="var(--primary)" />
@@ -612,7 +621,7 @@ export default function Dashboard() {
             </div>
             {usedSlotsList.length > 0 && (
               <div style={{ padding: '0 24px', textAlign: 'center', color: 'var(--muted)', fontSize: '13px' }}>
-                Slots already used for: <strong>{usedSlotsList.join(', ')}</strong>
+                Slots currently used for: <strong>{usedSlotsList.map(i => i.name).join(', ')}</strong>
               </div>
             )}
             <div className={styles.modalBody} style={{ padding: '32px 24px' }}>
