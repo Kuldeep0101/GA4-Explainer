@@ -33,6 +33,26 @@
   margin-bottom: 40px;
 }
 
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
+  padding: 8px 14px;
+  border-radius: 10px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.logo:hover {
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
+  transform: translateY(-1px);
+}
+
 .pricingCard {
   background: var(--card-bg);
   border: 1px solid var(--border);

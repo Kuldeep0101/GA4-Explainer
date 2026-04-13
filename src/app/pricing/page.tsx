@@ -46,6 +46,13 @@ export default function PricingPage() {
   return (
     <div className={styles.pricingPage}>
       <div className={styles.container}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '48px' }}>
+          <Link href="/" className={styles.logo}>
+            <Zap size={20} />
+            GA4 Explainer
+          </Link>
+        </div>
+        
         <div className={styles.header}>
           <h1 className={styles.title}>Simple, Agency-First Pricing</h1>
           <p className={styles.subtitle}>Stop wasting hours on reporting. Choose the plan that fits your growth.</p>
