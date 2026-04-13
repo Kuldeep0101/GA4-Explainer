@@ -269,7 +269,9 @@ export default function Dashboard() {
           </button>
           
           <p className={styles.signInNote}>Join 10+ agencies saving 20h/month on reporting.</p>
-          <div style={{ marginTop: '24px', textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '16px' }}>
+          <div style={{ marginTop: '24px', textAlign: 'center', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px' }}>
+            <Link href="/pricing" style={{ color: 'var(--primary)', fontWeight: '600', fontSize: '13px' }}>View Pricing</Link>
+            <div style={{ width: '100%', height: '8px' }}></div>
             <Link href="/privacy" style={{ color: '#a1a1aa', fontSize: '11px', textDecoration: 'none' }}>Privacy Policy</Link>
             <Link href="/terms" style={{ color: '#a1a1aa', fontSize: '11px', textDecoration: 'none' }}>Terms of Service</Link>
           </div>
@@ -344,6 +346,9 @@ export default function Dashboard() {
             />
           )}
           <ThemeToggle />
+          <Link href="/pricing" className="btn-secondary" style={{ padding: '8px 14px', fontSize: '13px' }}>
+            Pricing
+          </Link>
           <button className="btn-secondary" onClick={() => signOut()} title="Sign out" style={{ padding: '8px 14px', fontSize: '13px' }}>
             <LogOut size={15} /> Sign out
           </button>
