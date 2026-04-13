@@ -1,4 +1,5 @@
-export const runtime = 'edge'; // Bypasses Vercel's 10s serverless timeout
+export const runtime = 'nodejs';
+export const maxDuration = 60; // 60s is max for Vercel Hobby plan
 
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
@@ -6,9 +7,6 @@ import { SYSTEM_PROMPT, buildUserPrompt, GA4ReportData, ParsedReport } from '@/l
 
 // Helper for token optimization
 function simplifyGA4Data(rawStats: any) {
-  // If we had raw RunReportResponse JSON, we would map over rows here to eliminate dimensionValues/metricValues.
-  // Since our GA4 route already flattened much of it, we ensure it's mathematically clean and stripped
-  // of any heavy metadata.
   return {
     traffic: {
       total: rawStats?.totalUsers || '0',
@@ -50,100 +48,88 @@ async function getAIGeneratedSummary(simplifiedData: any, clientName: string) {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
   const combinedPrompt = `${SYSTEM_PROMPT}\n\nUser Data:\n${userPrompt}\n\nIMPORTANT: Return ONLY a raw JSON object. Do not wrap it in markdown block quotes (\`\`\`). NEVER use raw unescaped newlines inside JSON strings (use \\n instead).`;
 
-  console.log('--- GEMINI REQUEST START ---');
-  console.log('Sending optimized data for:', clientName);
-
+  console.log('--- AI GENERATION START ---');
+  
+  // Tier 1: Gemini 3.1 Lite (The Newest)
   try {
+    console.time('model-tier-1');
     const response = await ai.models.generateContent({
       model: 'gemini-3.1-flash-lite-preview',
       contents: combinedPrompt,
-      config: {
-        temperature: 0.3,
-        // @ts-ignore
-        thinkingConfig: { thinking_level: 'low' }
-      }
+      config: { temperature: 0.3, // @ts-ignore
+        thinkingConfig: { thinking_level: 'low' } }
     });
-
-    const rawText = response.text || '';
-    console.log('Gemini 3.1 Lite response length:', rawText.length);
-    return { text: rawText, model: 'gemini-3.1-flash-lite-preview' };
+    console.timeEnd('model-tier-1');
+    return { text: response.text, model: 'gemini-3.1-flash-lite-preview' };
   } catch (error: any) {
-    const errorMsg = error.message || '';
-    const isRetryable = errorMsg.includes('503') || errorMsg.includes('429');
-    if (isRetryable) {
-      console.warn('Primary model (gemini-3.1-flash-lite-preview) failed (503/429). Waiting 1 second before falling back to gemini-2.5-flash.', error.message);
-    } else {
-      console.warn('Primary model failed with unexpected error. Attempting fallback anyway.', error.message);
-    }
-
+    console.timeEnd('model-tier-1');
+    console.warn('Tier 1 failed (503/429), switching to Tier 2 in 1s...', error.message);
     await delay(1000);
+  }
 
-    const fallbackResponse = await ai.models.generateContent({
+  // Tier 2: Gemini 2.5 Flash (Preferred Fallback)
+  try {
+    console.time('model-tier-2');
+    const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: combinedPrompt,
-      config: {
-        temperature: 0.3,
-      }
+      config: { temperature: 0.3 }
     });
-
-    const rawFallbackText = fallbackResponse.text || '';
-    console.log('Gemini 2.5 Fallback response length:', rawFallbackText.length);
-    return { text: rawFallbackText, model: 'gemini-2.5-flash' };
+    console.timeEnd('model-tier-2');
+    return { text: response.text, model: 'gemini-2.5-flash' };
+  } catch (error: any) {
+    console.timeEnd('model-tier-2');
+    console.warn('Tier 2 failed, switching to Tier 3 (Workhorse)...', error.message);
   }
+
+  // Tier 3: Gemini 1.5 Flash (The Reliable One)
+  console.time('model-tier-3');
+  const response = await ai.models.generateContent({
+    model: 'gemini-1.5-flash',
+    contents: combinedPrompt,
+    config: { temperature: 0.3 }
+  });
+  console.timeEnd('model-tier-3');
+  return { text: response.text, model: 'gemini-1.5-flash' };
 }
 
 export async function POST(request: Request) {
+  console.time('total-report-gen');
   try {
     const body = await request.json();
     const { clientName, stats, dateRange } = body;
 
-    // Build date strings based on the range
     const today = new Date();
     const days = dateRange === '7' ? 7 : dateRange === '90' ? 90 : 30;
-    const prevDays = days * 2;
-
     const endDate = today.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    const startDate = new Date(today.getTime() - days * 86400000)
-      .toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    const startDate = new Date(today.getTime() - days * 86400000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
-    // If no API key, return rich mock data
     if (!process.env.GEMINI_API_KEY) {
-      // ... mock report returning
-      console.warn('Missing GEMINI_API_KEY. Returning mock report.');
-      const mockReport: ParsedReport = {
-        summary: `Mock summary for ${clientName}`,
-        highlights: [],
-        recommendations: [],
-        report_date_range: `${startDate} to ${endDate}`,
-      };
-      return NextResponse.json({ report: mockReport });
+      return NextResponse.json({ report: { summary: 'Mock', report_date_range: '...' } });
     }
 
-    // Prepare optimized GA4 data payload
     const simplifiedData = simplifyGA4Data(stats);
-
-    // Call abstraction function
+    
+    // Call the 3-tier AI logic
     const aiResponse = await getAIGeneratedSummary(simplifiedData, clientName);
 
-    // Parse JSON — strip accidental markdown fences if present
     let report: ParsedReport;
     try {
-      const clean = aiResponse.text.replace(/```json|```/g, '').trim();
+      const text = aiResponse.text || '';
+      const clean = text.replace(/```json|```/g, '').trim();
       report = JSON.parse(clean);
     } catch (parseError) {
-      console.error('JSON Parse Error. Raw Text:', aiResponse.text);
-      throw new Error('AI returned invalid JSON format');
+      throw new Error('AI returned invalid JSON');
     }
 
-    // Fill in report date range
-    if (!report.report_date_range) {
-      report.report_date_range = `${startDate} to ${endDate}`;
-    }
+    if (!report.report_date_range) report.report_date_range = `${startDate} to ${endDate}`;
 
+    console.timeEnd('total-report-gen');
     console.log(`--- SUCCESS: Model Used -> ${aiResponse.model} ---`);
     return NextResponse.json({ report, model: aiResponse.model });
 
   } catch (error: any) {
+    console.timeEnd('total-report-gen');
     console.error('Report Generation Error:', error);
     return NextResponse.json({ error: error.message || 'AI Generation Failed' }, { status: 500 });
   }
