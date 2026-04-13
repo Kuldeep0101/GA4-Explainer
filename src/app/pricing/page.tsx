@@ -46,7 +46,7 @@ export default function PricingPage() {
   return (
     <div className={styles.pricingPage}>
       <div className={styles.container}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '48px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
           <Link href="/" className={styles.logo}>
             <Zap size={20} />
             GA4 Explainer
@@ -155,7 +155,7 @@ export default function PricingPage() {
           </div>
           
           <div style={{ textAlign: 'center', marginTop: '80px' }}>
-             <Link href="/" style={{ color: 'var(--muted)', fontSize: '14px', textDecoration: 'underline' }}>Back to Dashboard</Link>
+             <Link href="/" style={{ color: 'var(--muted)', fontSize: '15px', fontWeight: '500', textDecoration: 'underline' }}>Back to Dashboard</Link>
           </div>
         </div>
       </div>
