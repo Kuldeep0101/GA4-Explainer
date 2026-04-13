@@ -55,27 +55,31 @@ async function getAIGeneratedSummary(simplifiedData: any, clientName: string) {
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-3.1-flash-lite-preview',
       contents: combinedPrompt,
       config: {
         temperature: 0.3,
+        // @ts-ignore
+        thinkingConfig: { thinking_level: 'low' }
       }
     });
 
     const rawText = response.text || '';
-    console.log('Gemini 1.5 Flash response length:', rawText.length);
-    return { text: rawText, model: 'gemini-1.5-flash' };
+    console.log('Gemini 3.1 Lite response length:', rawText.length);
+    return { text: rawText, model: 'gemini-3.1-flash-lite-preview' };
   } catch (error: any) {
     const errorMsg = error.message || '';
     const isRetryable = errorMsg.includes('503') || errorMsg.includes('429');
     if (isRetryable) {
-      console.warn('Primary model (gemini-1.5-flash) failed (503/429). Falling back immediately to gemini-1.5-flash-8b.', error.message);
+      console.warn('Primary model (gemini-3.1-flash-lite-preview) failed (503/429). Waiting 1 second before falling back to gemini-2.5-flash.', error.message);
     } else {
       console.warn('Primary model failed with unexpected error. Attempting fallback anyway.', error.message);
     }
 
+    await delay(1000);
+
     const fallbackResponse = await ai.models.generateContent({
-      model: 'gemini-1.5-flash-8b',
+      model: 'gemini-2.5-flash',
       contents: combinedPrompt,
       config: {
         temperature: 0.3,
@@ -83,8 +87,8 @@ async function getAIGeneratedSummary(simplifiedData: any, clientName: string) {
     });
 
     const rawFallbackText = fallbackResponse.text || '';
-    console.log('Gemini 1.5-8b Fallback response length:', rawFallbackText.length);
-    return { text: rawFallbackText, model: 'gemini-1.5-flash-8b' };
+    console.log('Gemini 2.5 Fallback response length:', rawFallbackText.length);
+    return { text: rawFallbackText, model: 'gemini-2.5-flash' };
   }
 }
 
