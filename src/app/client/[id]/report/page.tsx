@@ -44,6 +44,7 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
   const propertyId = decodeURIComponent(resolvedParams.id);
 
   const [loading, setLoading] = useState(true);
+  const [isUpdatingDate, setIsUpdatingDate] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState('30');
 
@@ -61,11 +62,14 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
     if (status === 'unauthenticated') router.replace('/');
   }, [status, router]);
 
-  const loadReport = useCallback(async (range: string) => {
-    setLoading(true);
+  const loadReport = useCallback(async (range: string, isOverlay: boolean = false) => {
+    if (!isOverlay) {
+      setLoading(true);
+      setRawStatsData(null);
+      setReportData(null);
+    }
     setError(null);
     setReportId(null);
-    setRawStatsData(null);
     try {
       // Queue AI report via backend. GA4 fetch is now securely handled by the background worker!
       const aiRes = await fetch('/api/generate-report', {
@@ -93,6 +97,8 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
 
   // Handle completed or failed polling status from hook
   useEffect(() => {
+    if (!reportId) return; // Fix: Prevent processing old cached data before the hook drops it when re-fetching
+
     if (pollStatus === 'completed' && parsedReport) { // parsedReport now contains { stats, report } from Worker
       const finalReport = parsedReport.report ? { ...parsedReport.report } : { ...parsedReport };
       const rawStats = parsedReport.stats || {};
@@ -112,6 +118,7 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
       });
 
       setLoading(false);
+      setIsUpdatingDate(false);
 
       // ── Update "Last Report" timestamp in Database ──────────────────
       if (clientId) {
@@ -131,6 +138,7 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
     } else if (pollStatus === 'failed' || pollError) {
       setError(pollError || 'Servers are currently busy. Please try again in a few minutes.');
       setLoading(false);
+      setIsUpdatingDate(false);
     }
   }, [pollStatus, parsedReport, pollError, clientId, clientName, propertyId, dateRange]);
 
@@ -147,8 +155,10 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleRangeChange = (newRange: string) => {
+    if (newRange === dateRange) return;
     setDateRange(newRange);
-    loadReport(newRange);
+    setIsUpdatingDate(true);
+    loadReport(newRange, true);
   };
 
   const handleDownloadPDF = async () => {
@@ -252,10 +262,31 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
 
           {/* Marketing Tip while Analyzing */}
           {pollStatus === 'analyzing' && (
-            <div style={{ marginTop: '24px', fontStyle: 'italic', color: '#6b7280', fontSize: '13.5px', maxWidth: '400px', textAlign: 'center', background: 'rgba(255,255,255,0.5)', padding: '12px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+            <div style={{ marginTop: '24px', fontStyle: 'italic', color: 'var(--foreground)', fontSize: '13.5px', maxWidth: '400px', textAlign: 'center', background: 'var(--card-bg)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)' }}>
               💡 {marketingTip}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Updating Overlay Modal */}
+      {isUpdatingDate && (
+        <div className={styles.modalOverlay} style={{ zIndex: 999 }}>
+          <div className={styles.modal} style={{ maxWidth: '340px', textAlign: 'center', padding: '32px' }}>
+            <Loader2 size={36} className={styles.spinning} style={{ color: 'var(--primary)', margin: '0 auto 16px' }} />
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>Updating Timeframe</h3>
+            <p style={{ color: 'var(--muted)', fontSize: '14px', marginBottom: '16px' }}>
+              AI is analyzing data for the last {dateRange} days... 
+            </p>
+            <div style={{ width: '100%', height: '6px', background: 'var(--border)', borderRadius: '4px', overflow: 'hidden' }}>
+              <div style={{ width: `${progress}%`, height: '100%', background: 'var(--primary)', transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)' }} />
+            </div>
+            <p style={{ color: 'var(--muted)', fontSize: '12px', marginTop: '12px', fontStyle: 'italic' }}>
+              {pollStatus === 'simplifying' ? 'Condensing metrics...' :
+               pollStatus === 'analyzing' ? 'Consulting Multi-Model Engine...' :
+               pollStatus === 'completed' ? 'Finalizing Report...' : 'Connecting to Google Analytics...'}
+            </p>
+          </div>
         </div>
       )}
 
