@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Plus, FileText, X, Users, TrendingUp, Zap, LogOut, LogIn, CheckCircle, Clock, Copy } from 'lucide-react';
+import { Plus, FileText, X, Users, TrendingUp, Zap, LogOut, LogIn, CheckCircle, Clock, Copy, AlertCircle } from 'lucide-react';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { useTheme } from 'next-themes';
 import { supabase } from '@/lib/supabase';
@@ -72,9 +72,9 @@ export default function Dashboard() {
         const timer = setTimeout(() => {
           setIsWelcomeOpen(true);
           sessionStorage.setItem('welcome_shown', 'true');
-          
+
           // Auto-close after 4 seconds
-          setTimeout(() => setIsWelcomeOpen(false), 4500); 
+          setTimeout(() => setIsWelcomeOpen(false), 4500);
         }, 3500);
         return () => clearTimeout(timer);
       }
@@ -224,81 +224,81 @@ export default function Dashboard() {
   const handleAddClient = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!session?.user?.email) return;
-    
+
     setIsAdding(true);
     try {
       const email = session.user.email;
       const cleanPropId = newClientProp.replace('properties/', '').trim();
 
-    // Identity-Based Slot Logic
-    const { data: allUsedProps } = await supabase
-      .from('clients')
-      .select('property_id, is_deleted, has_generated_report')
-      .eq('user_email', email);
-
-    const uniqueUsedIds = new Set(allUsedProps?.filter(c => !c.is_deleted || c.has_generated_report).map(c => c.property_id));
-    const isAlreadyInSystem = allUsedProps?.find(c => c.property_id === cleanPropId);
-
-    const limit = userPlan === 'agency' ? 999999 : (userPlan === 'starter' ? 5 : 2);
-
-    if (!isAlreadyInSystem && uniqueUsedIds.size >= limit) {
-      setIsModalOpen(false);
-      if (userPlan === 'free') setIsTrialModalOpen(true);
-      else setIsLimitModalOpen(true);
-      return;
-    }
-
-    if (isAlreadyInSystem && isAlreadyInSystem.is_deleted) {
-      // Tweak Logic: Re-activate old property ID without consuming a new slot
-      const { error: restoreError } = await supabase
+      // Identity-Based Slot Logic
+      const { data: allUsedProps } = await supabase
         .from('clients')
-        .update({ is_deleted: false, name: newClientName })
+        .select('property_id, is_deleted, has_generated_report')
+        .eq('user_email', email);
+
+      const uniqueUsedIds = new Set(allUsedProps?.filter(c => !c.is_deleted || c.has_generated_report).map(c => c.property_id));
+      const isAlreadyInSystem = allUsedProps?.find(c => c.property_id === cleanPropId);
+
+      const limit = userPlan === 'agency' ? 999999 : (userPlan === 'starter' ? 5 : 2);
+
+      if (!isAlreadyInSystem && uniqueUsedIds.size >= limit) {
+        setIsModalOpen(false);
+        if (userPlan === 'free') setIsTrialModalOpen(true);
+        else setIsLimitModalOpen(true);
+        return;
+      }
+
+      if (isAlreadyInSystem && isAlreadyInSystem.is_deleted) {
+        // Tweak Logic: Re-activate old property ID without consuming a new slot
+        const { error: restoreError } = await supabase
+          .from('clients')
+          .update({ is_deleted: false, name: newClientName })
+          .eq('user_email', email)
+          .eq('property_id', cleanPropId);
+
+        if (restoreError) {
+          toast.error("Error restoring client");
+          return;
+        }
+
+        // Remove from archived locally for instant UI update
+        setArchivedClients(prev => prev.filter(c => c.property_id !== cleanPropId));
+      } else if (!isAlreadyInSystem) {
+        // Add brand new client
+        const { error: insertError } = await supabase
+          .from('clients')
+          .insert([{
+            user_email: email,
+            name: newClientName,
+            property_id: cleanPropId,
+            has_generated_report: false
+          }]);
+
+        if (insertError) {
+          toast.error("Error adding client");
+          return;
+        }
+      }
+
+      // Refresh list
+      const { data: refreshed } = await supabase
+        .from('clients')
+        .select('*')
         .eq('user_email', email)
-        .eq('property_id', cleanPropId);
+        .eq('is_deleted', false)
+        .order('created_at', { ascending: false });
 
-      if (restoreError) {
-        toast.error("Error restoring client");
-        return;
-      }
+      setClients(refreshed?.map(c => ({
+        id: c.id,
+        name: c.name,
+        propertyId: c.property_id,
+        lastReport: c.last_report || 'Never',
+        hasGeneratedReport: c.has_generated_report || false
+      })) || []);
 
-      // Remove from archived locally for instant UI update
-      setArchivedClients(prev => prev.filter(c => c.property_id !== cleanPropId));
-    } else if (!isAlreadyInSystem) {
-      // Add brand new client
-      const { error: insertError } = await supabase
-        .from('clients')
-        .insert([{
-          user_email: email,
-          name: newClientName,
-          property_id: cleanPropId,
-          has_generated_report: false
-        }]);
-
-      if (insertError) {
-        toast.error("Error adding client");
-        return;
-      }
-    }
-
-    // Refresh list
-    const { data: refreshed } = await supabase
-      .from('clients')
-      .select('*')
-      .eq('user_email', email)
-      .eq('is_deleted', false)
-      .order('created_at', { ascending: false });
-
-    setClients(refreshed?.map(c => ({
-      id: c.id,
-      name: c.name,
-      propertyId: c.property_id,
-      lastReport: c.last_report || 'Never',
-      hasGeneratedReport: c.has_generated_report || false
-    })) || []);
-
-    setIsModalOpen(false);
-    setNewClientName('');
-    setNewClientProp('');
+      setIsModalOpen(false);
+      setNewClientName('');
+      setNewClientProp('');
     } catch (e) {
       toast.error('Unexpected error while adding client');
     } finally {
@@ -395,9 +395,9 @@ export default function Dashboard() {
                   </svg>
                   Generate my first report free
                 </button>
-                <Link 
-                  href="/sample" 
-                  className="btn-secondary" 
+                <Link
+                  href="/sample"
+                  className="btn-secondary"
                   style={{ width: '100%', padding: '14px', borderRadius: '12px', fontSize: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: '1px solid #27272a' }}
                 >
                   <FileText size={18} /> View Sample Report
@@ -560,17 +560,17 @@ export default function Dashboard() {
                   <span className={styles.userName}>{session?.user?.name}</span>
                   <span className={styles.userEmail}>{session?.user?.email}</span>
                 </div>
-                
-                <Link 
-                  href="/pricing" 
+
+                <Link
+                  href="/pricing"
                   className={styles.dropdownItem}
                   onClick={() => setIsUserMenuOpen(false)}
                 >
                   <Zap size={15} /> Pricing & Plans
                 </Link>
-                
-                <div 
-                  className={styles.dropdownItem} 
+
+                <div
+                  className={styles.dropdownItem}
                   onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                   style={{ cursor: 'pointer' }}
                 >
@@ -580,13 +580,13 @@ export default function Dashboard() {
                 </div>
 
                 <div className={styles.dropdownSeparator} />
-                
-                <button 
-                  className={styles.dropdownItem} 
+
+                <button
+                  className={styles.dropdownItem}
                   onClick={() => {
                     setIsUserMenuOpen(false);
                     signOut();
-                  }} 
+                  }}
                   style={{ color: '#ef4444' }}
                 >
                   <LogOut size={15} /> Sign out
@@ -631,7 +631,7 @@ export default function Dashboard() {
             </div>
             <form onSubmit={handleAddClient} className={styles.modalBody}>
               <div>
-                <label className={styles.label}>Client / Business Name</label>
+                <label className={styles.label} style={{ fontSize: '15px' }}>Client / Business Name</label>
                 <input
                   type="text"
                   className="input-field"
@@ -642,8 +642,34 @@ export default function Dashboard() {
                   required
                 />
               </div>
+
+              {/* Action Required Box: Moved UP */}
+              <div style={{ marginTop: '4px', background: 'color-mix(in srgb, #ef4444 10%, transparent)', border: '1px solid #ef4444', padding: '16px', borderRadius: '8px' }}>
+                <p style={{ fontSize: '15px', fontWeight: 'bold', marginBottom: '8px', color: '#ef4444' }}>
+                  <AlertCircle size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
+                  Important: Action Required Before Adding
+                </p>
+                <p style={{ fontSize: '14px', color: 'var(--foreground)', marginBottom: '12px', lineHeight: '1.5' }}>
+                  <strong>Add this exact system email as a 'Viewer' in your GA4 Property Access Management settings.</strong><br/>
+                  <span style={{ opacity: 0.8 }}>If you do not grant this permission, we cannot analyze the Property ID.</span>
+                </p>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <code style={{ fontSize: '13px', background: 'var(--background)', padding: '10px', borderRadius: '6px', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', border: '1px solid var(--border)' }}>
+                    {serviceAccountEmail}
+                  </code>
+                  <button 
+                    type="button"
+                    onClick={() => { navigator.clipboard.writeText(serviceAccountEmail); toast.success('Email Copied! Proceed to GA4 Dashboard.'); }}
+                    style={{ background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '6px', padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    title="Copy to Clipboard"
+                  >
+                    <Copy size={16} />
+                  </button>
+                </div>
+              </div>
+
               <div>
-                <label className={styles.label}>GA4 Property ID</label>
+                <label className={styles.label} style={{ fontSize: '15px' }}>GA4 Property ID</label>
                 <input
                   type="text"
                   className="input-field"
@@ -656,7 +682,7 @@ export default function Dashboard() {
                 {/* Restorable ID List (Identity Lock Transparency) */}
                 {usedSlotsList.length > 0 && (
                   <div style={{ marginTop: '12px', background: 'var(--secondary)', padding: '10px', borderRadius: '8px', fontSize: '11px' }}>
-                    <p style={{ fontWeight: '600', marginBottom: '8px', color: 'var(--muted)' }}>RESTorable IDs (Click to pre-fill):</p>
+                    <p style={{ fontWeight: '600', marginBottom: '8px', color: 'var(--muted)' }}>Restorable IDs (Click to pre-fill):</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                       {usedSlotsList.map(item => (
                         <button
@@ -668,12 +694,12 @@ export default function Dashboard() {
                           }}
                           style={{
                             background: 'var(--background)',
-                            padding: '4px 8px',
-                            borderRadius: '4px',
+                            padding: '6px 12px',
+                            borderRadius: '6px',
                             border: '1px solid var(--border)',
                             color: 'var(--primary)',
                             cursor: 'pointer',
-                            fontSize: '11px',
+                            fontSize: '13px',
                             fontWeight: '500'
                           }}
                           title={`Restore ${item.name}`}
@@ -685,33 +711,9 @@ export default function Dashboard() {
                   </div>
                 )}
 
-                <p style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '6px' }}>
+                <p style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '8px' }}>
                   Find this in GA4 → Admin → Property Settings → Property ID
                 </p>
-
-                <div style={{ marginTop: '16px', background: 'var(--card-bg)', border: '1px dashed var(--border)', padding: '12px', borderRadius: '8px' }}>
-                  <p style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--primary)' }}>
-                    <Zap size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
-                    Action Required: GA4 Access
-                  </p>
-                  <p style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '10px', lineHeight: '1.5' }}>
-                    <strong>"Add this email as a 'Viewer' in your GA4 Property settings."</strong><br />
-                    If they don't do this, the backend won't have permission to access that specific Property ID.
-                  </p>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <code style={{ fontSize: '10px', background: 'var(--background)', padding: '8px', borderRadius: '4px', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {serviceAccountEmail}
-                    </code>
-                    <button 
-                      type="button"
-                      onClick={() => { navigator.clipboard.writeText(serviceAccountEmail); toast.success('Email Copied! Proceed to GA4 Dashboard.'); }}
-                      style={{ background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '4px', padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                      title="Copy to Clipboard"
-                    >
-                      <Copy size={14} />
-                    </button>
-                  </div>
-                </div>
               </div>
               <button type="submit" className="btn-primary" style={{ marginTop: '8px', width: '100%' }}>
                 Save Client
@@ -1005,8 +1007,8 @@ export default function Dashboard() {
             <p className={styles.welcomeText}>
               GA4 Explainer is in active development. We are rolling out custom PDF branding and automated scheduling soon.
             </p>
-            <button 
-              className={styles.welcomeBtn} 
+            <button
+              className={styles.welcomeBtn}
               onClick={() => setIsWelcomeOpen(false)}
             >
               Exciting, thanks!
