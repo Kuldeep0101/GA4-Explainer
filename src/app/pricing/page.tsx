@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Check, ArrowRight, Zap, Shield, RefreshCw, Smartphone } from 'lucide-react';
 import { signIn, useSession } from 'next-auth/react';
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import styles from './page.module.css';
 
 export default function PricingPage() {
@@ -34,10 +35,10 @@ export default function PricingPage() {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        alert(data.error || 'Checkout failed');
+        toast.error(data.error || 'Checkout failed');
       }
     } catch (err) {
-      alert('Network error');
+      toast.error('Network error');
     } finally {
       setLoadingPlan(null);
     }

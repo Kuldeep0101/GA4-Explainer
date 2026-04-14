@@ -7,6 +7,7 @@ import { useSession, signIn, signOut } from 'next-auth/react';
 import { useTheme } from 'next-themes';
 import { supabase } from '@/lib/supabase';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import toast from 'react-hot-toast';
 import styles from './page.module.css';
 
 interface Client {
@@ -209,10 +210,10 @@ export default function Dashboard() {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        alert(data.error || 'Failed to initiate checkout.');
+        toast.error(data.error || 'Failed to initiate checkout.');
       }
     } catch (err) {
-      alert('Network error while initiating checkout.');
+      toast.error('Network error while initiating checkout.');
     } finally {
       setIsCheckoutLoading(false);
     }
@@ -251,7 +252,7 @@ export default function Dashboard() {
         .eq('property_id', cleanPropId);
 
       if (restoreError) {
-        alert("Error restoring client");
+        toast.error("Error restoring client");
         return;
       }
 
@@ -269,7 +270,7 @@ export default function Dashboard() {
         }]);
 
       if (insertError) {
-        alert("Error adding client");
+        toast.error("Error adding client");
         return;
       }
     }
@@ -321,7 +322,7 @@ export default function Dashboard() {
 
     if (error) {
       console.error('Error deleting client:', error);
-      alert('Failed to delete client. Please refresh and try again.');
+      toast.error('Failed to delete client. Please refresh and try again.');
     }
   };
 
@@ -685,7 +686,7 @@ export default function Dashboard() {
                     </code>
                     <button 
                       type="button"
-                      onClick={() => { navigator.clipboard.writeText(serviceAccountEmail); alert('Email Copied! Proceed to GA4 Dashboard.'); }}
+                      onClick={() => { navigator.clipboard.writeText(serviceAccountEmail); toast.success('Email Copied! Proceed to GA4 Dashboard.'); }}
                       style={{ background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '4px', padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                       title="Copy to Clipboard"
                     >

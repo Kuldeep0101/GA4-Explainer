@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { Toaster } from 'react-hot-toast';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -25,7 +27,20 @@ export default function RootLayout({
   return (
     <html lang="en" className={geistSans.variable}>
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <Toaster 
+            position="bottom-right" 
+            toastOptions={{
+              className: '',
+              style: {
+                background: 'var(--card-bg)',
+                color: 'var(--foreground)',
+                border: '1px solid var(--border)'
+              },
+            }} 
+          />
+          {children}
+        </Providers>
       </body>
     </html>
   );
