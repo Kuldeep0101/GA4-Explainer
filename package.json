@@ -13,6 +13,7 @@
     "@google-analytics/data": "^5.2.1",
     "@google/genai": "^1.49.0",
     "@supabase/supabase-js": "^2.103.0",
+    "@upstash/qstash": "^2.10.1",
     "dodopayments": "^2.27.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
@@ -23,6 +24,7 @@
     "openai": "^6.34.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-markdown": "^10.1.0",
     "resend": "^6.10.0",
     "stripe": "^22.0.1"
   },

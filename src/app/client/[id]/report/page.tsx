@@ -8,12 +8,22 @@ import { useSession } from 'next-auth/react';
 import { use } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { ParsedReport } from '@/lib/prompts';
+import { useReportStatus } from '@/hooks/useReportStatus';
+import ReactMarkdown from 'react-markdown';
 import styles from './page.module.css';
 
 const DATE_RANGES = [
   { label: 'Last 7 Days', value: '7' },
   { label: 'Last 30 Days', value: '30' },
   { label: 'Last 90 Days', value: '90' },
+];
+
+const DID_YOU_KNOW_TIPS = [
+  "Did you know? Removing 1 field from your contact form can increase conversions by 26%.",
+  "Did you know? 53% of mobile users leave a site if it takes longer than 3 seconds to load.",
+  "Did you know? Video on a landing page can increase conversions by up to 80%.",
+  "Did you know? Calls to action in red often outperform green buttons.",
+  "Did you know? Clear headings improve conversion rates by 42% on average."
 ];
 
 interface FullReportData {
@@ -28,7 +38,7 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
   const resolvedParams = use(params);
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const clientName = searchParams.get('name') || 'Client';
   const clientId = searchParams.get('clientId') || null;
   const propertyId = decodeURIComponent(resolvedParams.id);
@@ -36,7 +46,15 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState('30');
+
   const [reportData, setReportData] = useState<FullReportData | null>(null);
+  const [rawStatsData, setRawStatsData] = useState<any>(null);
+
+  const [reportId, setReportId] = useState<string | null>(null);
+  const [marketingTip, setMarketingTip] = useState(DID_YOU_KNOW_TIPS[0]);
+
+  // Hook handles all polling!
+  const { status: pollStatus, progress, data: parsedReport, error: pollError } = useReportStatus(reportId);
 
   // Redirect if not logged in
   useEffect(() => {
@@ -46,38 +64,54 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
   const loadReport = useCallback(async (range: string) => {
     setLoading(true);
     setError(null);
+    setReportId(null);
+    setRawStatsData(null);
     try {
-      // 1. Fetch GA4 stats
-      const ga4Res = await fetch(`/api/ga4?propertyId=${propertyId}&dateRange=${range}`);
-      if (!ga4Res.ok) throw new Error('Failed to fetch GA4 data');
-      const ga4Json = await ga4Res.json();
-
-      // 2. Generate AI report
+      // Queue AI report via backend. GA4 fetch is now securely handled by the background worker!
       const aiRes = await fetch('/api/generate-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           clientName,
-          stats: ga4Json.data,
+          propertyId,
           dateRange: range,
         }),
       });
-      if (!aiRes.ok) throw new Error('Failed to generate report');
-      const aiJson = await aiRes.json();
+      if (!aiRes.ok) throw new Error('Failed to start report generation');
+      const startJson = await aiRes.json();
 
-      if (aiJson.error) throw new Error(aiJson.error);
+      if (startJson.error) throw new Error(startJson.error);
 
-      // Successfully log the specific AI model used in the browser console
-      console.log(`✅ Report Generated Successfully!`);
-      console.log(`🤖 Model Engine Used: ${aiJson.model}`);
+      // 3. Kick off polling by setting reportId
+      setReportId(startJson.reportId);
+
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong');
+      setLoading(false);
+    }
+  }, [propertyId, clientName]);
+
+  // Handle completed or failed polling status from hook
+  useEffect(() => {
+    if (pollStatus === 'completed' && parsedReport) { // parsedReport now contains { stats, report } from Worker
+      const finalReport = parsedReport.report ? { ...parsedReport.report } : { ...parsedReport };
+      const rawStats = parsedReport.stats || {};
+
+      if (finalReport.__model_used) {
+        console.log(`✅ Report Generated Successfully!`);
+        console.log(`🤖 Model Engine Used: ${finalReport.__model_used}`);
+        delete finalReport.__model_used;
+      }
 
       setReportData({
         clientName,
         propertyId,
-        dateRange: range,
-        stats: ga4Json.data,
-        report: aiJson.report,
+        dateRange,
+        stats: rawStats,
+        report: finalReport,
       });
+
+      setLoading(false);
 
       // ── Update "Last Report" timestamp in Database ──────────────────
       if (clientId) {
@@ -85,20 +119,28 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
           month: 'short', day: 'numeric', year: 'numeric',
           hour: 'numeric', minute: '2-digit',
         });
-        await supabase
+        supabase
           .from('clients')
-          .update({ 
+          .update({
             last_report: now,
-            has_generated_report: true 
+            has_generated_report: true
           })
-          .eq('id', clientId);
+          .eq('id', clientId)
+          .then(() => { });
       }
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong');
-    } finally {
+    } else if (pollStatus === 'failed' || pollError) {
+      setError(pollError || 'Servers are currently busy. Please try again in a few minutes.');
       setLoading(false);
     }
-  }, [propertyId, clientName]);
+  }, [pollStatus, parsedReport, pollError, clientId, clientName, propertyId, dateRange]);
+
+  // Shuffle marketing tip when AI goes into analyzing phase!
+  useEffect(() => {
+    if (pollStatus === 'analyzing') {
+      const randomTip = DID_YOU_KNOW_TIPS[Math.floor(Math.random() * DID_YOU_KNOW_TIPS.length)];
+      setMarketingTip(randomTip);
+    }
+  }, [pollStatus]);
 
   useEffect(() => {
     loadReport(dateRange);
@@ -118,42 +160,26 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
     const canvas = await html2canvas(element, {
       scale: 2,
       useCORS: true,
-      // Expand to full scroll height so nothing is clipped
       windowWidth: element.scrollWidth,
       windowHeight: element.scrollHeight,
     });
     const imgData = canvas.toDataURL('image/png');
 
     const pdf = new jsPDF('p', 'mm', 'a4');
-    const pageWidth = pdf.internal.pageSize.getWidth();   // 210mm
-    const pageHeight = pdf.internal.pageSize.getHeight();  // 297mm
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
 
-    // Total rendered height in mm
     const totalImgHeight = (canvas.height * pageWidth) / canvas.width;
 
     let remainingHeight = totalImgHeight;
-    let yOffset = 0;         // how far down the image we've printed (mm)
+    let yOffset = 0;
     let isFirstPage = true;
 
     while (remainingHeight > 0) {
       if (!isFirstPage) pdf.addPage();
 
-      // srcY in canvas pixels corresponding to current yOffset mm
-      const srcYpx = (yOffset / totalImgHeight) * canvas.height;
-      // How many mm of image fit on this page
       const sliceHeightMm = Math.min(remainingHeight, pageHeight);
-      // Corresponding canvas pixel height for this slice
-      const sliceHeightPx = (sliceHeightMm / totalImgHeight) * canvas.height;
-
-      // Draw the full-width image shifted upward so only this slice is visible
-      pdf.addImage(
-        imgData,
-        'PNG',
-        0,
-        -(yOffset),          // shift image up by how many mm we've already printed
-        pageWidth,
-        totalImgHeight,       // full image height — jsPDF clips to page boundary
-      );
+      pdf.addImage(imgData, 'PNG', 0, -(yOffset), pageWidth, totalImgHeight);
 
       yOffset += sliceHeightMm;
       remainingHeight -= sliceHeightMm;
@@ -206,12 +232,30 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
         </div>
       </div>
 
-      {/* Loading State */}
+      {/* Loading State via useReportStatus Hook */}
       {loading && (
         <div className={styles.loadingState}>
           <Loader2 size={36} className={styles.spinning} />
           <h3>Analysing GA4 Data…</h3>
-          <p>Pulling metrics and generating your plain-English report with Gemini AI</p>
+          <p>
+            {pollStatus === 'pending' ? 'Step 1/3: Preparing your data...'
+              : pollStatus === 'simplifying' ? 'Step 1/3: Condensing metrics...'
+                : pollStatus === 'analyzing' ? 'Step 2/3: AI is finding insights...'
+                  : pollStatus === 'completed' ? 'Step 3/3: Finalizing Report!'
+                    : 'Initializing...'}
+          </p>
+
+          {/* Progress Bar Container */}
+          <div style={{ width: '100%', maxWidth: '300px', height: '6px', background: '#e5e7eb', borderRadius: '4px', marginTop: '16px', overflow: 'hidden' }}>
+            <div style={{ width: `${progress}%`, height: '100%', background: '#4f46e5', transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)' }} />
+          </div>
+
+          {/* Marketing Tip while Analyzing */}
+          {pollStatus === 'analyzing' && (
+            <div style={{ marginTop: '24px', fontStyle: 'italic', color: '#6b7280', fontSize: '13.5px', maxWidth: '400px', textAlign: 'center', background: 'rgba(255,255,255,0.5)', padding: '12px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+              💡 {marketingTip}
+            </div>
+          )}
         </div>
       )}
 
@@ -249,7 +293,7 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
           <div className={styles.reportHeader}>
             <div>
               <div className={styles.reportBadge}>GA4 Performance Report</div>
-              <h1 className={styles.reportTitle}>Performance Update</h1>
+              <h1 className={styles.reportTitle}>{reportData.report.meta?.report_title || 'Performance Update'}</h1>
               <p className={styles.reportPeriod}>{reportData.report.report_date_range}</p>
             </div>
             <div className={styles.reportClientBlock}>
@@ -263,7 +307,12 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
 
           {/* Executive Summary */}
           <div className={styles.summaryBlock}>
-            <p className={styles.summaryText}>{reportData.report.summary}</p>
+            <p className={styles.summaryText}>{reportData.report.executive_summary.text}</p>
+            {reportData.report.executive_summary.key_metric_label && (
+              <div style={{ marginTop: '12px', padding: '8px 12px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '6px', display: 'inline-block', fontWeight: 500, color: '#4f46e5' }}>
+                Key Metric ({reportData.report.executive_summary.key_metric_label}): {reportData.report.executive_summary.key_metric_value}
+              </div>
+            )}
           </div>
 
           {/* Stat Cards */}
@@ -283,17 +332,24 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
             </div>
           )}
 
-          {/* AI Highlights */}
+          {/* AI Highlights & Analysis Sections */}
           <div className={styles.section}>
             <h2 className={styles.sectionTitle}>What the data says</h2>
             <div className={styles.highlightsGrid}>
-              {reportData.report.highlights.map((h, i) => (
+              {reportData.report.analysis_sections.map((h, i) => (
                 <div key={i} className={`${styles.highlight} ${sentimentClass(h.sentiment)}`}>
                   <div className={styles.highlightTitle}>
                     {sentimentIcon(h.sentiment)}
-                    {h.title}
+                    {h.heading}
                   </div>
-                  <p className={styles.highlightInsight}>{h.insight}</p>
+                  <div className={styles.highlightInsight}>
+                    <ReactMarkdown>{h.body_markdown}</ReactMarkdown>
+                  </div>
+                  {h.visual_tip && (
+                    <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '8px', fontStyle: 'italic' }}>
+                      📸 Tip for PDF: {h.visual_tip}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -338,16 +394,21 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
             </div>
           )}
 
-          {/* Recommendations */}
+          {/* Strategic Roadmap */}
           <div className={`${styles.section} ${styles.recommendationsSection}`}>
-            <h2 className={styles.sectionTitle}>Recommended actions this month</h2>
+            <h2 className={styles.sectionTitle}>Strategic Roadmap</h2>
             <div className={styles.recommendations}>
-              {reportData.report.recommendations.map((rec, i) => (
+              {reportData.report.strategic_roadmap.map((rec, i) => (
                 <div key={i} className={styles.recommendation}>
                   <div className={styles.recNumber}>{i + 1}</div>
                   <div>
-                    <div className={styles.recAction}>{rec.action}</div>
-                    <div className={styles.recReason}>{rec.reason}</div>
+                    <div className={styles.recAction} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {rec.task}
+                      <span style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', background: rec.priority.toLowerCase().includes('high') ? '#fee2e2' : '#f3f4f6', color: rec.priority.toLowerCase().includes('high') ? '#ef4444' : '#4b5563' }}>
+                        {rec.priority}
+                      </span>
+                    </div>
+                    <div className={styles.recReason}>{rec.expected_impact}</div>
                   </div>
                 </div>
               ))}

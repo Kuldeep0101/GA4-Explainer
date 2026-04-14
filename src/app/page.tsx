@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Plus, FileText, X, Users, TrendingUp, Zap, LogOut, LogIn, CheckCircle, Clock } from 'lucide-react';
+import { Plus, FileText, X, Users, TrendingUp, Zap, LogOut, LogIn, CheckCircle, Clock, Copy } from 'lucide-react';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { useTheme } from 'next-themes';
 import { supabase } from '@/lib/supabase';
@@ -36,7 +36,15 @@ export default function Dashboard() {
   const [usedSlotsList, setUsedSlotsList] = useState<{ name: string, id: string }[]>([]);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
+  const [serviceAccountEmail, setServiceAccountEmail] = useState('Loading...');
   const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetch('/api/config')
+      .then(r => r.json())
+      .then(d => setServiceAccountEmail(d.serviceAccountEmail))
+      .catch(() => setServiceAccountEmail('Error loading email'));
+  }, []);
 
   // Click-away listener for user menu
   useEffect(() => {
@@ -661,6 +669,30 @@ export default function Dashboard() {
                 <p style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '6px' }}>
                   Find this in GA4 → Admin → Property Settings → Property ID
                 </p>
+
+                <div style={{ marginTop: '16px', background: 'var(--card-bg)', border: '1px dashed var(--border)', padding: '12px', borderRadius: '8px' }}>
+                  <p style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--primary)' }}>
+                    <Zap size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
+                    Action Required: GA4 Access
+                  </p>
+                  <p style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '10px', lineHeight: '1.5' }}>
+                    <strong>"Add this email as a 'Viewer' in your GA4 Property settings."</strong><br />
+                    If they don't do this, the backend won't have permission to access that specific Property ID.
+                  </p>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <code style={{ fontSize: '10px', background: 'var(--background)', padding: '8px', borderRadius: '4px', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {serviceAccountEmail}
+                    </code>
+                    <button 
+                      type="button"
+                      onClick={() => { navigator.clipboard.writeText(serviceAccountEmail); alert('Email Copied! Proceed to GA4 Dashboard.'); }}
+                      style={{ background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '4px', padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      title="Copy to Clipboard"
+                    >
+                      <Copy size={14} />
+                    </button>
+                  </div>
+                </div>
               </div>
               <button type="submit" className="btn-primary" style={{ marginTop: '8px', width: '100%' }}>
                 Save Client
