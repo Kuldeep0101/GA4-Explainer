@@ -532,13 +532,18 @@ export default function Dashboard() {
             <p className={styles.subtitle}>{clients.length} {clients.length === 1 ? 'client' : 'clients'} · Click any card to generate a report</p>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
-            <Plus size={18} />
-            Add Client
-          </button>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
+              <Plus size={18} />
+              Add Client
+            </button>
+            <div className={styles.comingSoonGlow} style={{ marginTop: '8px', padding: '4px 8px' }}>
+              <Zap size={10} fill="currentColor" /> More features coming soon...
+            </div>
+          </div>
 
-          <div className={styles.userMenuContainer} ref={menuRef}>
+          <div className={styles.userMenuContainer} ref={menuRef} style={{ marginTop: '2px' }}>
             <button
               className={styles.avatarBtn}
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
@@ -614,10 +619,6 @@ export default function Dashboard() {
             <FileText size={16} />
             <span><strong>GA4</strong> data · Lasts 30 days</span>
           </div>
-
-          <div className={styles.comingSoonGlow}>
-            <Zap size={10} fill="currentColor" /> More features coming soon...
-          </div>
         </div>
       )}
 
@@ -668,14 +669,16 @@ export default function Dashboard() {
                     <Copy size={16} />
                   </button>
                 </div>
-                <button 
-                  type="button" 
-                  onClick={() => setShowPermissionVideo(!showPermissionVideo)}
-                  style={{ marginTop: '10px', background: 'transparent', border: 'none', color: '#ef4444', textDecoration: 'underline', fontSize: '13px', cursor: 'pointer', fontWeight: '500' }}
-                >
-                  {showPermissionVideo ? 'Hide Video' : 'How to grant Viewer permissions (Video)'}
-                </button>
-                {showPermissionVideo && <HelpVideo src="/how-to-grant-viewer.mp4" />}
+                <div style={{ marginTop: '14px', paddingTop: '10px', borderTop: '1px dashed color-mix(in srgb, #ef4444 30%, transparent)' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => setShowPermissionVideo(!showPermissionVideo)}
+                    style={{ background: 'transparent', border: 'none', color: '#ef4444', textDecoration: 'underline', fontSize: '13px', cursor: 'pointer', fontWeight: 'bold' }}
+                  >
+                    {showPermissionVideo ? 'Hide Video' : '▶ How to grant Viewer permissions (Demo)'}
+                  </button>
+                  {showPermissionVideo && <HelpVideo src="/how-to-grant-viewer.mp4" />}
+                </div>
               </div>
 
               <div>
@@ -721,16 +724,16 @@ export default function Dashboard() {
                   </div>
                 )}
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
-                  <p style={{ fontSize: '13px', color: 'var(--muted)' }}>
-                    Find this in GA4 → Admin → Property Settings → Property ID
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', padding: '8px', background: 'var(--secondary)', borderRadius: '6px' }}>
+                  <p style={{ fontSize: '13px', color: 'var(--muted)', fontWeight: '500' }}>
+                    GA4 → Admin → Property Settings → Property ID
                   </p>
                   <button 
                     type="button" 
                     onClick={() => setShowPropertyIdVideo(!showPropertyIdVideo)}
-                    style={{ background: 'transparent', border: 'none', color: 'var(--primary)', textDecoration: 'underline', fontSize: '13px', cursor: 'pointer', fontWeight: '500' }}
+                    style={{ background: 'var(--background)', border: '1px solid var(--border)', padding: '4px 10px', borderRadius: '4px', color: 'var(--primary)', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}
                   >
-                    {showPropertyIdVideo ? 'Hide Video' : 'Where is this? (Video)'}
+                    {showPropertyIdVideo ? 'Hide Video' : '▶ Show Me How'}
                   </button>
                 </div>
                 {showPropertyIdVideo && <HelpVideo src="/how-to-find-property-id.mp4" />}
