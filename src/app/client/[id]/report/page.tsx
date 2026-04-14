@@ -225,7 +225,7 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
               key={r.value}
               className={`${styles.rangeBtn} ${dateRange === r.value ? styles.rangeActive : ''}`}
               onClick={() => handleRangeChange(r.value)}
-              disabled={loading}
+              disabled={loading || isUpdatingDate}
             >
               {r.label}
             </button>
@@ -233,10 +233,10 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
         </div>
 
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button className="btn-secondary" onClick={() => loadReport(dateRange)} disabled={loading} title="Regenerate">
-            <RefreshCw size={16} className={loading ? styles.spinning : ''} />
+          <button className="btn-secondary" onClick={() => loadReport(dateRange)} disabled={loading || isUpdatingDate} title="Regenerate">
+            <RefreshCw size={16} className={loading || isUpdatingDate ? styles.spinning : ''} />
           </button>
-          <button className="btn-primary" onClick={handleDownloadPDF} disabled={loading || !reportData}>
+          <button className="btn-primary" onClick={handleDownloadPDF} disabled={loading || isUpdatingDate || !reportData}>
             <Download size={16} /> Download PDF
           </button>
         </div>

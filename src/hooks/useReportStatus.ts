@@ -26,8 +26,11 @@ export function useReportStatus(reportId: string | null): UseReportStatusReturn 
     }
 
     let intervalId: NodeJS.Timeout;
+    let isCompleted = false;
 
     const poll = async () => {
+      if (isCompleted) return; // Hard-stop any rogue interval triggers
+
       try {
         const res = await fetch(`/api/report-status?id=${reportId}`);
         if (!res.ok) return;
@@ -44,12 +47,14 @@ export function useReportStatus(reportId: string | null): UseReportStatusReturn 
         } else if (currentStatus === 'analyzing') {
           setProgress(65);
         } else if (currentStatus === 'completed') {
+          isCompleted = true; // Flag immediately
           setProgress(100);
           setData(json.data);
-          clearInterval(intervalId);
+          if (intervalId) clearInterval(intervalId);
         } else if (currentStatus === 'failed') {
+          isCompleted = true; // Flag immediately
           setError(json.error_message || 'Report Generation Failed');
-          clearInterval(intervalId);
+          if (intervalId) clearInterval(intervalId);
         }
       } catch (err: any) {
         console.error('Polling error:', err);
