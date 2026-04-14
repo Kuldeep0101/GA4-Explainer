@@ -45,6 +45,7 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
 
   const [loading, setLoading] = useState(true);
   const [isUpdatingDate, setIsUpdatingDate] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState('30');
 
@@ -162,41 +163,51 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
   };
 
   const handleDownloadPDF = async () => {
-    const html2canvas = (await import('html2canvas')).default;
-    const { jsPDF } = await import('jspdf');
-    const element = document.getElementById('report-content');
-    if (!element) return;
+    setIsDownloading(true);
+    // Yield execution to allow React to paint the "Generating PDF..." modal before blocking the thread
+    await new Promise(r => setTimeout(r, 50));
 
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      windowWidth: element.scrollWidth,
-      windowHeight: element.scrollHeight,
-    });
-    const imgData = canvas.toDataURL('image/png');
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+      const { jsPDF } = await import('jspdf');
+      const element = document.getElementById('report-content');
+      if (!element) return;
 
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight,
+      });
+      const imgData = canvas.toDataURL('image/png');
 
-    const totalImgHeight = (canvas.height * pageWidth) / canvas.width;
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
 
-    let remainingHeight = totalImgHeight;
-    let yOffset = 0;
-    let isFirstPage = true;
+      const totalImgHeight = (canvas.height * pageWidth) / canvas.width;
 
-    while (remainingHeight > 0) {
-      if (!isFirstPage) pdf.addPage();
+      let remainingHeight = totalImgHeight;
+      let yOffset = 0;
+      let isFirstPage = true;
 
-      const sliceHeightMm = Math.min(remainingHeight, pageHeight);
-      pdf.addImage(imgData, 'PNG', 0, -(yOffset), pageWidth, totalImgHeight);
+      while (remainingHeight > 0) {
+        if (!isFirstPage) pdf.addPage();
 
-      yOffset += sliceHeightMm;
-      remainingHeight -= sliceHeightMm;
-      isFirstPage = false;
+        const sliceHeightMm = Math.min(remainingHeight, pageHeight);
+        pdf.addImage(imgData, 'PNG', 0, -(yOffset), pageWidth, totalImgHeight);
+
+        yOffset += sliceHeightMm;
+        remainingHeight -= sliceHeightMm;
+        isFirstPage = false;
+      }
+
+      pdf.save(`${clientName.replace(/\s+/g, '_')}_GA4_Report_${dateRange}Days.pdf`);
+    } catch (err) {
+      console.error('Failed to generate PDF', err);
+    } finally {
+      setIsDownloading(false);
     }
-
-    pdf.save(`${clientName.replace(/\s+/g, '_')}_GA4_Report.pdf`);
   };
 
   const sentimentIcon = (s: string) => {
@@ -236,8 +247,9 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
           <button className="btn-secondary" onClick={() => loadReport(dateRange)} disabled={loading || isUpdatingDate} title="Regenerate">
             <RefreshCw size={16} className={loading || isUpdatingDate ? styles.spinning : ''} />
           </button>
-          <button className="btn-primary" onClick={handleDownloadPDF} disabled={loading || isUpdatingDate || !reportData}>
-            <Download size={16} /> Download PDF
+          <button className="btn-primary" onClick={handleDownloadPDF} disabled={loading || isUpdatingDate || isDownloading || !reportData}>
+            {isDownloading ? <Loader2 size={16} className={styles.spinning} /> : <Download size={16} />} 
+            {isDownloading ? 'Processing...' : 'Download PDF'}
           </button>
         </div>
       </div>
@@ -285,6 +297,19 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
               {pollStatus === 'simplifying' ? 'Condensing metrics...' :
                pollStatus === 'analyzing' ? 'Consulting Multi-Model Engine...' :
                pollStatus === 'completed' ? 'Finalizing Report...' : 'Connecting to Google Analytics...'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Downloading PDF Overlay Modal */}
+      {isDownloading && (
+        <div className={styles.modalOverlay} style={{ zIndex: 9999 }}>
+          <div className={styles.modal} style={{ maxWidth: '340px', textAlign: 'center', padding: '32px' }}>
+            <Loader2 size={36} className={styles.spinning} style={{ color: 'var(--primary)', margin: '0 auto 16px' }} />
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>Generating PDF...</h3>
+            <p style={{ color: 'var(--muted)', fontSize: '14px', marginBottom: '16px' }}>
+              Formatting your report for high-quality export. Please wait, this may take a few seconds depending on the device.
             </p>
           </div>
         </div>
