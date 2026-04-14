@@ -647,18 +647,22 @@ export default function Dashboard() {
                 />
               </div>
 
-              {/* Action Required Box: Moved UP */}
-              <div style={{ marginTop: '4px', background: 'color-mix(in srgb, #ef4444 10%, transparent)', border: '1px solid #ef4444', padding: '16px', borderRadius: '8px' }}>
-                <p style={{ fontSize: '15px', fontWeight: 'bold', marginBottom: '8px', color: '#ef4444' }}>
-                  <AlertCircle size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
-                  Important: Action Required Before Adding
-                </p>
-                <p style={{ fontSize: '14px', color: 'var(--foreground)', marginBottom: '12px', lineHeight: '1.5' }}>
-                  <strong>Add this exact system email as a 'Viewer' in your GA4 Property Access Management settings.</strong><br/>
-                  <span style={{ opacity: 0.8 }}>If you do not grant this permission, we cannot analyze the Property ID.</span>
-                </p>
+              <div style={{ marginTop: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label className={styles.label} style={{ fontSize: '14px', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
+                    <AlertCircle size={15} /> Add this exact email as a 'Viewer' in GA4:
+                  </label>
+                  <button 
+                    type="button" 
+                    onClick={() => setShowPermissionVideo(!showPermissionVideo)}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '13px', cursor: 'pointer', fontWeight: 'bold' }}
+                  >
+                    {showPermissionVideo ? 'Hide Demo' : '▶ Watch Demo'}
+                  </button>
+                </div>
+
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <code style={{ fontSize: '13px', background: 'var(--background)', padding: '10px', borderRadius: '6px', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', border: '1px solid var(--border)' }}>
+                  <code style={{ fontSize: '13px', background: 'var(--background)', padding: '10px', borderRadius: '6px', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', border: '1px solid var(--border)', color: 'var(--foreground)' }}>
                     {serviceAccountEmail}
                   </code>
                   <button 
@@ -670,16 +674,7 @@ export default function Dashboard() {
                     <Copy size={16} />
                   </button>
                 </div>
-                <div style={{ marginTop: '14px', paddingTop: '10px', borderTop: '1px dashed color-mix(in srgb, #ef4444 30%, transparent)' }}>
-                  <button 
-                    type="button" 
-                    onClick={() => setShowPermissionVideo(!showPermissionVideo)}
-                    style={{ background: 'transparent', border: 'none', color: '#ef4444', textDecoration: 'underline', fontSize: '13px', cursor: 'pointer', fontWeight: 'bold' }}
-                  >
-                    {showPermissionVideo ? 'Hide Video' : '▶ How to grant Viewer permissions (Demo)'}
-                  </button>
-                  {showPermissionVideo && <HelpVideo src="/how-to-grant-viewer.mp4" />}
-                </div>
+                {showPermissionVideo && <div style={{ marginTop: '10px' }}><HelpVideo src="/how-to-grant-viewer.mp4" /></div>}
               </div>
 
               <div>
@@ -725,19 +720,16 @@ export default function Dashboard() {
                   </div>
                 )}
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', padding: '8px', background: 'var(--secondary)', borderRadius: '6px' }}>
-                  <p style={{ fontSize: '13px', color: 'var(--muted)', fontWeight: '500' }}>
-                    GA4 → Admin → Property Settings → Property ID
-                  </p>
+                <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '10px' }}>
                   <button 
                     type="button" 
                     onClick={() => setShowPropertyIdVideo(!showPropertyIdVideo)}
-                    style={{ background: 'var(--background)', border: '1px solid var(--border)', padding: '4px 10px', borderRadius: '4px', color: 'var(--primary)', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--primary)', textDecoration: 'underline', fontSize: '13px', cursor: 'pointer', fontWeight: 'bold' }}
                   >
-                    {showPropertyIdVideo ? 'Hide Video' : '▶ Show Me How'}
+                    {showPropertyIdVideo ? 'Hide Video' : '▶ Where to find Property ID? (Demo)'}
                   </button>
                 </div>
-                {showPropertyIdVideo && <HelpVideo src="/how-to-find-property-id.mp4" />}
+                {showPropertyIdVideo && <div style={{ marginTop: '8px' }}><HelpVideo src="/how-to-find-property-id.mp4" /></div>}
 
               </div>
               <button type="submit" className="btn-primary" style={{ marginTop: '8px', width: '100%' }}>
