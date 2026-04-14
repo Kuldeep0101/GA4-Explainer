@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase';
 import type { ParsedReport } from '@/lib/prompts';
 import { useReportStatus } from '@/hooks/useReportStatus';
 import ReactMarkdown from 'react-markdown';
+import { HelpVideo } from '@/components/HelpVideo';
 import styles from './page.module.css';
 
 const DATE_RANGES = [
@@ -55,6 +56,7 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
   const [reportId, setReportId] = useState<string | null>(null);
   const [marketingTip, setMarketingTip] = useState(DID_YOU_KNOW_TIPS[0]);
   const [serviceAccountEmail, setServiceAccountEmail] = useState('Loading...');
+  const [showWhitelabelVideo, setShowWhitelabelVideo] = useState(false);
 
   useEffect(() => {
     fetch('/api/config')
@@ -261,6 +263,22 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
           </button>
         </div>
       </div>
+
+      {/* Whitelabel / Presenting Help Video Toggle */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginBottom: '16px' }}>
+        <button 
+          type="button" 
+          onClick={() => setShowWhitelabelVideo(!showWhitelabelVideo)}
+          style={{ background: 'transparent', border: 'none', color: 'var(--primary)', textDecoration: 'underline', fontSize: '13px', cursor: 'pointer', fontWeight: '500' }}
+        >
+          {showWhitelabelVideo ? 'Hide Video' : 'How to Whitelabel & Present (Video)'}
+        </button>
+      </div>
+      {showWhitelabelVideo && (
+         <div style={{ paddingBottom: '24px' }}>
+           <HelpVideo src="/how-to-whitelabel.mp4" title="How to Whitelabel & Present this to your Client" />
+         </div>
+      )}
 
       {/* Loading State via useReportStatus Hook */}
       {loading && (

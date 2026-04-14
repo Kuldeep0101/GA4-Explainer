@@ -7,6 +7,7 @@ import { useSession, signIn, signOut } from 'next-auth/react';
 import { useTheme } from 'next-themes';
 import { supabase } from '@/lib/supabase';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { HelpVideo } from '@/components/HelpVideo';
 import toast from 'react-hot-toast';
 import styles from './page.module.css';
 
@@ -36,10 +37,11 @@ export default function Dashboard() {
   const [archivedClients, setArchivedClients] = useState<any[]>([]);
   const [usedSlotsList, setUsedSlotsList] = useState<{ name: string, id: string }[]>([]);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
   const [serviceAccountEmail, setServiceAccountEmail] = useState('Loading...');
   const [isAdding, setIsAdding] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showPermissionVideo, setShowPermissionVideo] = useState(false);
+  const [showPropertyIdVideo, setShowPropertyIdVideo] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -666,6 +668,14 @@ export default function Dashboard() {
                     <Copy size={16} />
                   </button>
                 </div>
+                <button 
+                  type="button" 
+                  onClick={() => setShowPermissionVideo(!showPermissionVideo)}
+                  style={{ marginTop: '10px', background: 'transparent', border: 'none', color: '#ef4444', textDecoration: 'underline', fontSize: '13px', cursor: 'pointer', fontWeight: '500' }}
+                >
+                  {showPermissionVideo ? 'Hide Video' : 'How to grant Viewer permissions (Video)'}
+                </button>
+                {showPermissionVideo && <HelpVideo src="/how-to-grant-viewer.mp4" />}
               </div>
 
               <div>
@@ -711,9 +721,20 @@ export default function Dashboard() {
                   </div>
                 )}
 
-                <p style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '8px' }}>
-                  Find this in GA4 → Admin → Property Settings → Property ID
-                </p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+                  <p style={{ fontSize: '13px', color: 'var(--muted)' }}>
+                    Find this in GA4 → Admin → Property Settings → Property ID
+                  </p>
+                  <button 
+                    type="button" 
+                    onClick={() => setShowPropertyIdVideo(!showPropertyIdVideo)}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--primary)', textDecoration: 'underline', fontSize: '13px', cursor: 'pointer', fontWeight: '500' }}
+                  >
+                    {showPropertyIdVideo ? 'Hide Video' : 'Where is this? (Video)'}
+                  </button>
+                </div>
+                {showPropertyIdVideo && <HelpVideo src="/how-to-find-property-id.mp4" />}
+
               </div>
               <button type="submit" className="btn-primary" style={{ marginTop: '8px', width: '100%' }}>
                 Save Client
