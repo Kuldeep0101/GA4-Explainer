@@ -688,6 +688,17 @@ export default function Dashboard() {
                   required
                 />
 
+                <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '10px' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => setShowPropertyIdVideo(!showPropertyIdVideo)}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--primary)', textDecoration: 'underline', fontSize: '13px', cursor: 'pointer', fontWeight: 'bold' }}
+                  >
+                    {showPropertyIdVideo ? 'Hide Video' : '▶ Where to find Property ID? (Demo)'}
+                  </button>
+                </div>
+                {showPropertyIdVideo && <div style={{ marginTop: '8px' }}><HelpVideo src="/how-to-find-property-id.mp4" /></div>}
+
                 {/* Restorable ID List (Identity Lock Transparency) */}
                 {usedSlotsList.length > 0 && (
                   <div style={{ marginTop: '12px', background: 'var(--secondary)', padding: '10px', borderRadius: '8px', fontSize: '11px' }}>
@@ -719,17 +730,6 @@ export default function Dashboard() {
                     </div>
                   </div>
                 )}
-
-                <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '10px' }}>
-                  <button 
-                    type="button" 
-                    onClick={() => setShowPropertyIdVideo(!showPropertyIdVideo)}
-                    style={{ background: 'transparent', border: 'none', color: 'var(--primary)', textDecoration: 'underline', fontSize: '13px', cursor: 'pointer', fontWeight: 'bold' }}
-                  >
-                    {showPropertyIdVideo ? 'Hide Video' : '▶ Where to find Property ID? (Demo)'}
-                  </button>
-                </div>
-                {showPropertyIdVideo && <div style={{ marginTop: '8px' }}><HelpVideo src="/how-to-find-property-id.mp4" /></div>}
 
               </div>
               <button type="submit" className="btn-primary" style={{ marginTop: '8px', width: '100%' }}>
