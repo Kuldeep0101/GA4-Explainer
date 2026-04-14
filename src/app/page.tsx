@@ -37,6 +37,7 @@ export default function Dashboard() {
   const [archivedClients, setArchivedClients] = useState<any[]>([]);
   const [usedSlotsList, setUsedSlotsList] = useState<{ name: string, id: string }[]>([]);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
   const [serviceAccountEmail, setServiceAccountEmail] = useState('Loading...');
   const [isAdding, setIsAdding] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
