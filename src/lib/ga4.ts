@@ -9,13 +9,31 @@ export async function fetchGA4Data(propertyId: string, days: number) {
   let analyticsDataClient: BetaAnalyticsDataClient;
 
   if (process.env.GOOGLE_CLIENT_EMAIL && process.env.GOOGLE_PRIVATE_KEY) {
+    const rawKey = process.env.GOOGLE_PRIVATE_KEY || '';
+    
+    // [DEBUG] Log key diagnostics to Vercel logs - REMOVE AFTER FIX
+    console.log('[GA4 DEBUG] GOOGLE_CLIENT_EMAIL:', process.env.GOOGLE_CLIENT_EMAIL);
+    console.log('[GA4 DEBUG] Raw key length:', rawKey.length);
+    console.log('[GA4 DEBUG] Key first 40 chars:', rawKey.substring(0, 40));
+    console.log('[GA4 DEBUG] Key last 40 chars:', rawKey.substring(rawKey.length - 40));
+    console.log('[GA4 DEBUG] Contains actual newline (\\n):', rawKey.includes('\n'));
+    console.log('[GA4 DEBUG] Contains escaped \\\\n:', rawKey.includes('\\n'));
+    console.log('[GA4 DEBUG] Newline count:', (rawKey.match(/\n/g) || []).length);
+
+    const processedKey = rawKey
+      .replace(/\\\\n/g, '\n')  // handle double-escaped \\n
+      .replace(/\\n/g, '\n');   // handle single-escaped \n
+
+    console.log('[GA4 DEBUG] Processed key length:', processedKey.length);
+    console.log('[GA4 DEBUG] Processed key first 40 chars:', processedKey.substring(0, 40));
+    console.log('[GA4 DEBUG] Processed newline count:', (processedKey.match(/\n/g) || []).length);
+    console.log('[GA4 DEBUG] Starts correctly:', processedKey.startsWith('-----BEGIN PRIVATE KEY-----'));
+    console.log('[GA4 DEBUG] Ends correctly:', processedKey.trimEnd().endsWith('-----END PRIVATE KEY-----'));
+
     analyticsDataClient = new BetaAnalyticsDataClient({
       credentials: {
         client_email: process.env.GOOGLE_CLIENT_EMAIL,
-        // Vercel double-escapes \n → \\n. This handles all variants robustly.
-        private_key: (process.env.GOOGLE_PRIVATE_KEY || '')
-          .replace(/\\\\n/g, '\n')  // handle double-escaped \\n
-          .replace(/\\n/g, '\n'),   // handle single-escaped \n
+        private_key: processedKey,
       },
     });
   } else {
