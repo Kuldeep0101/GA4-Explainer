@@ -54,6 +54,14 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
 
   const [reportId, setReportId] = useState<string | null>(null);
   const [marketingTip, setMarketingTip] = useState(DID_YOU_KNOW_TIPS[0]);
+  const [serviceAccountEmail, setServiceAccountEmail] = useState('Loading...');
+
+  useEffect(() => {
+    fetch('/api/config')
+      .then(r => r.json())
+      .then(d => setServiceAccountEmail(d.serviceAccountEmail))
+      .catch(() => setServiceAccountEmail('free-ai-convert@better-search-console-490113.iam.gserviceaccount.com'));
+  }, []);
 
   // Hook handles all polling!
   const { status: pollStatus, progress, data: parsedReport, error: pollError } = useReportStatus(reportId);
@@ -320,7 +328,13 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
         <div className={styles.errorState}>
           <AlertCircle size={32} />
           <h3>Report failed to load</h3>
-          <p className={styles.errorText}>{error}</p>
+          <p className={styles.errorText}>
+            {error.includes('PERMISSION_DENIED') 
+              ? 'Access Denied: The system does not have permission to read this Google Analytics property.'
+              : error.includes('UNAUTHENTICATED')
+              ? 'Authentication Failed: Could not connect to Google Analytics.'
+              : error}
+          </p>
 
           <div className={styles.troubleshootingBox}>
             <h4>Troubleshooting Checklist</h4>
@@ -331,8 +345,13 @@ export default function ClientReport({ params }: { params: Promise<{ id: string 
               <li>
                 <strong>Enable API:</strong> Is the Google Analytics Data API enabled in your Google Cloud Project? <a href="https://console.cloud.google.com/apis/api/analyticsdata.googleapis.com/metrics" target="_blank" rel="noreferrer" style={{ color: '#6366f1', textDecoration: 'underline' }}>Check Google Cloud</a>
               </li>
-              <li>
-                <strong>Add Service Account:</strong> Have you added your Service Account email as a "Viewer" directly inside the GA4 Property Access Management?
+              <li style={{ marginTop: '12px' }}>
+                <strong style={{ display: 'block', marginBottom: '8px' }}>Add Service Account as Viewer:</strong> 
+                Please copy the specific service account email address below:<br/>
+                <code style={{ display: 'inline-block', background: 'var(--card-bg)', border: '1px solid var(--border)', padding: '10px', borderRadius: '6px', margin: '8px 0', userSelect: 'all', wordBreak: 'break-all', fontSize: '12px' }}>
+                  {serviceAccountEmail}
+                </code><br/>
+                and add it as a <strong>"Viewer"</strong> directly inside the GA4 Property Access Management for property {propertyId}.
               </li>
             </ul>
           </div>
