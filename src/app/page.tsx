@@ -38,6 +38,8 @@ export default function Dashboard() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
   const [serviceAccountEmail, setServiceAccountEmail] = useState('Loading...');
+  const [isAdding, setIsAdding] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -222,8 +224,11 @@ export default function Dashboard() {
   const handleAddClient = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!session?.user?.email) return;
-    const email = session.user.email;
-    const cleanPropId = newClientProp.replace('properties/', '').trim();
+    
+    setIsAdding(true);
+    try {
+      const email = session.user.email;
+      const cleanPropId = newClientProp.replace('properties/', '').trim();
 
     // Identity-Based Slot Logic
     const { data: allUsedProps } = await supabase
@@ -294,35 +299,48 @@ export default function Dashboard() {
     setIsModalOpen(false);
     setNewClientName('');
     setNewClientProp('');
+    } catch (e) {
+      toast.error('Unexpected error while adding client');
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
-    // Find the client to move to archive locally
-    const clientToArchive = clients.find(c => c.id === id);
+    setIsDeleting(true);
+    try {
+      // Find the client to move to archive locally
+      const clientToArchive = clients.find(c => c.id === id);
 
-    // Identity-Based Logic: Soft delete to keep the slot "locked" if it has a report
-    const { error } = await supabase
-      .from('clients')
-      .update({ is_deleted: true, deleted_at: new Date().toISOString() })
-      .eq('id', id);
+      // Identity-Based Logic: Soft delete to keep the slot "locked" if it has a report
+      const { error } = await supabase
+        .from('clients')
+        .update({ is_deleted: true, deleted_at: new Date().toISOString() })
+        .eq('id', id);
 
-    if (!error) {
-      setClients(prev => prev.filter(c => c.id !== id));
+      if (!error) {
+        setClients(prev => prev.filter(c => c.id !== id));
 
-      // Dynamic Update: If this client had a report, move it to archived state instantly
-      if (clientToArchive?.hasGeneratedReport) {
-        setArchivedClients(prev => [{
-          ...clientToArchive,
-          property_id: clientToArchive.propertyId,
-          last_report: clientToArchive.lastReport
-        }, ...prev]);
+        // Dynamic Update: If this client had a report, move it to archived state instantly
+        if (clientToArchive?.hasGeneratedReport) {
+          setArchivedClients(prev => {
+            if (prev.some(c => c.id === clientToArchive.id)) return prev;
+            return [{
+              ...clientToArchive,
+              property_id: clientToArchive.propertyId,
+              last_report: clientToArchive.lastReport
+            }, ...prev];
+          });
+        }
       }
-    }
-    setDeleteId(null);
+      setDeleteId(null);
 
-    if (error) {
-      console.error('Error deleting client:', error);
-      toast.error('Failed to delete client. Please refresh and try again.');
+      if (error) {
+        console.error('Error deleting client:', error);
+        toast.error('Failed to delete client. Please refresh and try again.');
+      }
+    } finally {
+      setIsDeleting(false);
     }
   };
 
