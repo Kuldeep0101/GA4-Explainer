@@ -12,7 +12,10 @@ export async function fetchGA4Data(propertyId: string, days: number) {
     analyticsDataClient = new BetaAnalyticsDataClient({
       credentials: {
         client_email: process.env.GOOGLE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        // Vercel double-escapes \n → \\n. This handles all variants robustly.
+        private_key: (process.env.GOOGLE_PRIVATE_KEY || '')
+          .replace(/\\\\n/g, '\n')  // handle double-escaped \\n
+          .replace(/\\n/g, '\n'),   // handle single-escaped \n
       },
     });
   } else {
