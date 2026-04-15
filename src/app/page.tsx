@@ -105,12 +105,26 @@ export default function Dashboard() {
         setIsPro(true);
         setUserPlan(userRow?.plan || 'starter');
       } else if (typeof window !== 'undefined' && window.location.search.includes('success=true')) {
-        // Optimistic UI for instant return from Dodo Payments (before webhook fires)
-        setIsPro(true);
-        const urlParams = new URLSearchParams(window.location.search);
-        const planParam = urlParams.get('plan') as 'starter' | 'agency' || 'starter';
-        setUserPlan(planParam);
-        window.history.replaceState(null, '', window.location.pathname);
+        // Strict verification: poll DB waiting for webhook instead of trusting URL param directly.
+        toast.loading('Verifying payment status...', { id: 'verify-toast' });
+        let attempts = 0;
+        
+        const pollInterval = window.setInterval(async () => {
+          attempts++;
+          const { data: pollUser } = await supabase.from('users').select('*').eq('email', email).single();
+          
+          if (pollUser?.is_pro) {
+            window.clearInterval(pollInterval);
+            setIsPro(true);
+            setUserPlan(pollUser.plan || 'starter');
+            window.history.replaceState(null, '', window.location.pathname);
+            toast.success('Payment verified! Features unlocked.', { id: 'verify-toast' });
+          } else if (attempts >= 15) {
+            window.clearInterval(pollInterval);
+            window.history.replaceState(null, '', window.location.pathname);
+            toast.error('Verification timeout. If paid, please refresh later.', { id: 'verify-toast' });
+          }
+        }, 2000);
       }
 
       // 2. Trial Calculation (7 Days from created_at)
@@ -482,10 +496,15 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '24px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
-            <Link href="/pricing" style={{ color: 'var(--primary)', fontWeight: '600', fontSize: '13px' }}>View Pricing</Link>
-            <Link href="/privacy" style={{ color: '#a1a1aa', fontSize: '11px', textDecoration: 'none' }}>Privacy Policy</Link>
-            <Link href="/terms" style={{ color: '#a1a1aa', fontSize: '11px', textDecoration: 'none' }}>Terms of Service</Link>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', borderTop: '1px solid var(--border)', paddingTop: '20px', gap: '16px' }}>
+            <p style={{ fontSize: '10px', color: '#a1a1aa', textAlign: 'center', maxWidth: '450px', lineHeight: '1.5' }}>
+              GA4 Explainer is an independent tool and is not affiliated with, endorsed by, or sponsored by Google LLC. Google Analytics™ and GA4™ are trademarks of Google LLC.
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '24px' }}>
+              <Link href="/pricing" style={{ color: 'var(--primary)', fontWeight: '600', fontSize: '13px' }}>View Pricing</Link>
+              <Link href="/privacy" style={{ color: '#a1a1aa', fontSize: '11px', textDecoration: 'none' }}>Privacy Policy</Link>
+              <Link href="/terms" style={{ color: '#a1a1aa', fontSize: '11px', textDecoration: 'none' }}>Terms of Service</Link>
+            </div>
           </div>
         </div>
       </div>
