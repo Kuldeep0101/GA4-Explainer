@@ -471,39 +471,39 @@ export default function Dashboard() {
           {/* How It Works Grid */}
           <div className={styles.howItWorksGrid}>
             <div>
-              <div style={{ background: 'var(--secondary)', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px', fontSize: '12px', fontWeight: '800' }}>1</div>
-              <p style={{ fontSize: '14px', fontWeight: '700', marginBottom: '6px' }}>Connect your clients&apos; GA4</p>
-              <p style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.6', marginBottom: '8px' }}>
+              <div style={{ background: 'var(--secondary)', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px', fontSize: '14px', fontWeight: '800' }}>1</div>
+              <p style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px' }}>Connect your clients&apos; GA4</p>
+              <p style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: '1.7', marginBottom: '10px' }}>
                 Sign in with Google and add property IDs. We only request read-only access—we can never change any data.
               </p>
-              <p style={{ fontSize: '11px', fontStyle: 'italic', color: 'var(--primary)', fontWeight: '500' }}>&ldquo;Finally — a tool that doesn&apos;t need my clients&apos; passwords.&rdquo;</p>
+              <p style={{ fontSize: '13px', fontStyle: 'italic', color: 'var(--primary)', fontWeight: '500' }}>&ldquo;Finally — a tool that doesn&apos;t need my clients&apos; passwords.&rdquo;</p>
             </div>
             <div>
-              <div style={{ background: 'var(--secondary)', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px', fontSize: '12px', fontWeight: '800' }}>2</div>
-              <p style={{ fontSize: '14px', fontWeight: '700', marginBottom: '6px' }}>AI Performance Summary</p>
-              <p style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.6', marginBottom: '8px' }}>
+              <div style={{ background: 'var(--secondary)', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px', fontSize: '14px', fontWeight: '800' }}>2</div>
+              <p style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px' }}>AI Performance Summary</p>
+              <p style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: '1.7', marginBottom: '10px' }}>
                 Choose 7, 30, or 90 days. Our AI writes a plain-English summary of what happened and what it means for your client.
               </p>
-              <p style={{ fontSize: '11px', fontStyle: 'italic', color: 'var(--primary)', fontWeight: '500' }}>&ldquo;It explains bounce rate without me having to explain bounce rate.&rdquo;</p>
+              <p style={{ fontSize: '13px', fontStyle: 'italic', color: 'var(--primary)', fontWeight: '500' }}>&ldquo;It explains bounce rate without me having to explain bounce rate.&rdquo;</p>
             </div>
             <div>
-              <div style={{ background: 'var(--secondary)', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px', fontSize: '12px', fontWeight: '800' }}>3</div>
-              <p style={{ fontSize: '14px', fontWeight: '700', marginBottom: '6px' }}>Download and send</p>
-              <p style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.6', marginBottom: '8px' }}>
+              <div style={{ background: 'var(--secondary)', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px', fontSize: '14px', fontWeight: '800' }}>3</div>
+              <p style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px' }}>Download and send</p>
+              <p style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: '1.7', marginBottom: '10px' }}>
                 Exports a professional PDF. Forward it directly—no client login required, no confusing dashboards.
               </p>
-              <p style={{ fontSize: '11px', fontStyle: 'italic', color: 'var(--primary)', fontWeight: '500' }}>&ldquo;My client replied &apos;this is the clearest report I&apos;ve ever received.&apos;&rdquo;</p>
+              <p style={{ fontSize: '13px', fontStyle: 'italic', color: 'var(--primary)', fontWeight: '500' }}>&ldquo;My client replied &apos;this is the clearest report I&apos;ve ever received.&apos;&rdquo;</p>
             </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', borderTop: '1px solid var(--border)', paddingTop: '20px', gap: '16px' }}>
-            <p style={{ fontSize: '10px', color: '#a1a1aa', textAlign: 'center', maxWidth: '450px', lineHeight: '1.5' }}>
+            <p style={{ fontSize: '12px', color: '#a1a1aa', textAlign: 'center', maxWidth: '520px', lineHeight: '1.6' }}>
               GA4 Explainer is an independent tool and is not affiliated with, endorsed by, or sponsored by Google LLC. Google Analytics™ and GA4™ are trademarks of Google LLC.
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '24px' }}>
-              <Link href="/pricing" style={{ color: 'var(--primary)', fontWeight: '600', fontSize: '13px' }}>View Pricing</Link>
-              <Link href="/privacy" style={{ color: '#a1a1aa', fontSize: '11px', textDecoration: 'none' }}>Privacy Policy</Link>
-              <Link href="/terms" style={{ color: '#a1a1aa', fontSize: '11px', textDecoration: 'none' }}>Terms of Service</Link>
+              <Link href="/pricing" style={{ color: 'var(--primary)', fontWeight: '600', fontSize: '14px' }}>View Pricing</Link>
+              <Link href="/privacy" style={{ color: '#a1a1aa', fontSize: '13px', textDecoration: 'none' }}>Privacy Policy</Link>
+              <Link href="/terms" style={{ color: '#a1a1aa', fontSize: '13px', textDecoration: 'none' }}>Terms of Service</Link>
             </div>
           </div>
         </div>
