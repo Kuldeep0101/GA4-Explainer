@@ -1,6 +1,6 @@
 .main {
   min-height: 100vh;
-  padding: 32px 24px 64px;
+  padding: 24px 24px 64px;
   max-width: 1100px;
   margin: 0 auto;
 }
@@ -24,26 +24,26 @@
   align-items: center;
   gap: 8px;
   font-size: 15px;
-  font-weight: 700;
-  color: var(--primary);
-  background: color-mix(in srgb, var(--primary) 10%, transparent);
-  border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
-  padding: 8px 14px;
-  border-radius: 10px;
+  font-weight: 500;
+  font-family: var(--font-heading), sans-serif;
+  color: var(--foreground);
   white-space: nowrap;
+  letter-spacing: -0.01em;
 }
 
 .title {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
+  font-family: var(--font-heading), sans-serif;
   letter-spacing: -0.03em;
   margin: 0;
 }
 
 .subtitle {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--muted);
   margin: 2px 0 0;
+  font-family: var(--font-body), sans-serif;
 }
 
 .statsBar {
@@ -79,14 +79,17 @@
 .clientCard {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08); /* Fix 4: depth on white cards in light mode */
+  gap: 14px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  transition: border-color 0.15s ease;
+  box-shadow: none;
 }
 
 .clientCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary);
 }
 
 .clientHeader {
@@ -96,23 +99,30 @@
 }
 
 .clientAvatar {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 70%, #7c3aed));
-  color: white;
-  font-size: 20px;
-  font-weight: 700;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #F3F4F6;
+  color: #374151;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: var(--font-heading), sans-serif;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
+:global(.dark) .clientAvatar {
+  background: #1F2937;
+  color: #D1D5DB;
+}
+
 .clientName {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  margin: 0 0 4px;
+  font-family: var(--font-heading), sans-serif;
+  margin: 0 0 3px;
   letter-spacing: -0.01em;
 }
 
@@ -121,12 +131,19 @@
   align-items: center;
   gap: 5px;
   font-size: 11px;
-  font-weight: 600;
-  color: #16a34a;
-  background: #dcfce7;
-  padding: 2px 8px;
-  border-radius: 99px;
-  letter-spacing: 0.02em;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+/* 6px green dot — replaces the vivid pill */
+.status::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10B981;
+  flex-shrink: 0;
 }
 
 .clientMeta {
@@ -192,9 +209,9 @@
 .modal {
   background: var(--card-bg);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 16px;
   width: 100%;
-  max-width: 460px;
+  max-width: 480px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   animation: slideUp 0.2s ease;
 }
@@ -242,10 +259,10 @@
 }
 
 .modalBody {
-  padding: 24px;
+  padding: 28px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
 .label {
@@ -304,18 +321,18 @@
 }
 
 .proBadge {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  color: white;
-  padding: 6px 14px;
-  border-radius: 8px;
+  gap: 5px;
+  background: #F5F3FF;
+  color: #5B21B6;
+  border: 1px solid #DDD6FE;
+  padding: 3px 10px;
+  border-radius: 99px;
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.3);
-  text-transform: uppercase;
+  font-weight: 600;
+  font-family: var(--font-body), sans-serif;
+  letter-spacing: 0.01em;
 }
 
 /* ─── Sign-In Landing Page ────────────────── */
@@ -562,14 +579,15 @@
 }
 
 .freeBadge {
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
   padding: 3px 10px;
   border-radius: 99px;
-  background: color-mix(in srgb, var(--primary) 10%, transparent);
-  color: var(--primary);
-  border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
-  letter-spacing: 0.05em;
+  background: #F5F3FF;
+  color: #5B21B6;
+  border: 1px solid #DDD6FE;
+  letter-spacing: 0.01em;
+  font-family: var(--font-body), sans-serif;
 }
 
 .mainHeader {
@@ -684,26 +702,7 @@
   filter: brightness(1.1);
 }
 
-/* --- Glowing Feature Text --- */
-.comingSoonGlow {
-  font-size: 11px;
-  font-weight: 700;
-  color: #7c3aed;
-  background: rgba(124, 58, 237, 0.1);
-  padding: 2px 8px;
-  border-radius: 6px;
-  animation: pulseGlow 2s infinite ease-in-out;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  border: 1px solid rgba(124, 58, 237, 0.2);
-}
-
-@keyframes pulseGlow {
-  0% { opacity: 0.6; box-shadow: 0 0 0px rgba(124, 58, 237, 0); }
-  50% { opacity: 1; box-shadow: 0 0 10px rgba(124, 58, 237, 0.3); }
-  100% { opacity: 0.6; box-shadow: 0 0 0px rgba(124, 58, 237, 0); }
-}
+/* comingSoonGlow intentionally removed — whitespace is more premium */
 
 /* --- Report Preview (Landing Page) --- */
 .reportPreviewMockup {

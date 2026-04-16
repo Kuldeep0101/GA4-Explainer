@@ -1,40 +1,40 @@
 :root {
-  --background: #F2F1ED;   /* warm parchment — no more eye-burning white */
+  --background: #F9F8F6;   /* warm off-white — premium SaaS standard */
   --foreground: #171717;
-  --primary: #5b4cf0;
-  --primary-hover: #4e40db;
-  --secondary: #ECEAE3;   /* warm off-white secondary surfaces */
-  --border: #DDD9CF;      /* warm border to match */
-  --card-bg: #FAFAF7;     /* card just slightly lighter than the bg */
+  --primary: #7C3AED;
+  --primary-hover: #6D28D9;
+  --secondary: #ECEAE3;
+  --border: #E5E3DC;
+  --card-bg: #FFFFFF;
   --muted: #71717a;
-  --radius: 12px;
-  --shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  --radius: 14px;
+  --shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
-    --background: #0a0a0a;
+    --background: #0A0A0A;   /* true near-black, not blue-tinted */
     --foreground: #ededed;
-    --primary: #7466f2;
-    --primary-hover: #8f84f7;
-    --secondary: #27272a;
-    --border: #27272a;
-    --card-bg: #18181b;
+    --primary: #8B5CF6;
+    --primary-hover: #7C3AED;
+    --secondary: #1A1A1A;
+    --border: #272727;
+    --card-bg: #111111;
     --muted: #a1a1aa;
-    --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
   }
 }
 
 .dark {
-  --background: #0a0a0a;
+  --background: #0A0A0A;
   --foreground: #ededed;
-  --primary: #7466f2;
-  --primary-hover: #8f84f7;
-  --secondary: #27272a;
-  --border: #27272a;
-  --card-bg: #18181b;
+  --primary: #8B5CF6;
+  --primary-hover: #7C3AED;
+  --secondary: #1A1A1A;
+  --border: #272727;
+  --card-bg: #111111;
   --muted: #a1a1aa;
-  --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 html,
@@ -45,7 +45,7 @@ body {
   padding: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-body), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 15px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -62,9 +62,15 @@ a {
   text-decoration: none;
 }
 
+/* Typography System */
 h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-weight: 600;
   letter-spacing: -0.02em;
+}
+
+p, label, input, button, span, li, td, th {
+  font-family: var(--font-body), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 /* Premium Button Class (Global) */
@@ -75,20 +81,21 @@ h1, h2, h3, h4, h5, h6 {
   gap: 8px;
   background-color: var(--primary);
   color: white;
-  padding: 10px 20px;
-  border-radius: calc(var(--radius) - 4px);
+  padding: 0 18px;
+  height: 36px;
+  border-radius: 8px;
   font-weight: 700;
-  font-size: 15px;
+  font-size: 13px;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(91, 76, 240, 0.2);
+  transition: background-color 0.15s ease, transform 0.1s ease;
+  font-family: var(--font-body), sans-serif;
+  letter-spacing: 0.01em;
 }
 
 .btn-primary:hover {
   background-color: var(--primary-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(91, 76, 240, 0.3);
 }
 
 .btn-secondary {
@@ -98,13 +105,15 @@ h1, h2, h3, h4, h5, h6 {
   gap: 8px;
   background-color: var(--secondary);
   color: var(--foreground);
-  padding: 10px 20px;
-  border-radius: calc(var(--radius) - 4px);
+  padding: 0 16px;
+  height: 36px;
+  border-radius: 8px;
   font-weight: 500;
-  font-size: 15px;
+  font-size: 13px;
   border: 1px solid var(--border);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.15s ease;
+  font-family: var(--font-body), sans-serif;
 }
 
 .btn-secondary:hover {
@@ -121,18 +130,18 @@ h1, h2, h3, h4, h5, h6 {
 
 .input-field {
   width: 100%;
-  padding: 10px 12px;
-  border-radius: calc(var(--radius) - 4px);
-  border: 1px solid var(--border);
+  padding: 0 14px;
+  height: 42px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
   background: var(--card-bg);
   color: var(--foreground);
-  font-family: inherit;
-  font-size: 15px;
-  transition: border-color 0.2s ease;
+  font-family: var(--font-body), sans-serif;
+  font-size: 14px;
+  transition: border-color 0.15s ease;
 }
 
 .input-field:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(91, 76, 240, 0.1);
 }

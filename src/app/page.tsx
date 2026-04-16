@@ -11,6 +11,24 @@ import { HelpVideo } from '@/components/HelpVideo';
 import toast from 'react-hot-toast';
 import styles from './page.module.css';
 
+function relativeTime(dateStr: string): string {
+  try {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr; // fallback for old format strings
+    const diff = Date.now() - date.getTime();
+    const mins = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    if (mins < 2) return 'Just now';
+    if (mins < 60) return `${mins} minutes ago`;
+    if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+    if (days < 30) return `${days} day${days === 1 ? '' : 's'} ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch {
+    return dateStr;
+  }
+}
+
 interface Client {
   id: string;
   name: string;
@@ -542,26 +560,20 @@ export default function Dashboard() {
             <div className={styles.mainHeader}>
               <h1 className={styles.title}>Your Clients</h1>
               {isPro ? (
-                <div className={styles.proBadge} style={{ background: userPlan === 'agency' ? 'linear-gradient(135deg, #7c3aed 0%, #5b4cf0 100%)' : undefined }}>
-                  <CheckCircle size={14} /> {userPlan === 'agency' ? 'AGENCY' : 'STARTER'} PLAN
+                <div className={styles.proBadge}>
+                  {userPlan === 'agency' ? 'Agency' : 'Starter'}
                 </div>
               ) : (
-                <div className={styles.freeBadge}>FREE TIER</div>
+                <div className={styles.freeBadge}>Free</div>
               )}
             </div>
             <p className={styles.subtitle}>{clients.length} {clients.length === 1 ? 'client' : 'clients'} · Click any card to generate a report</p>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
-              <Plus size={18} />
-              Add Client
+              + New Client
             </button>
-            <div className={styles.comingSoonGlow} style={{ marginTop: '8px', padding: '4px 8px' }}>
-              <Zap size={10} fill="currentColor" /> More features coming soon...
-            </div>
-          </div>
 
           <div className={styles.userMenuContainer} ref={menuRef} style={{ marginTop: '2px' }}>
             <button
@@ -647,14 +659,17 @@ export default function Dashboard() {
         <div className={styles.modalOverlay} onClick={() => setIsModalOpen(false)}>
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2>Add New Client</h2>
+              <div>
+                <h2 style={{ fontSize: '18px', fontWeight: 600, margin: 0 }}>Add a client</h2>
+                <p style={{ fontSize: '13px', color: 'var(--muted)', margin: '4px 0 0' }}>Connect a GA4 property to generate reports</p>
+              </div>
               <button className={styles.closeBtn} onClick={() => setIsModalOpen(false)}>
                 <X size={20} />
               </button>
             </div>
             <form onSubmit={handleAddClient} className={styles.modalBody}>
               <div>
-                <label className={styles.label} style={{ fontSize: '15px' }}>Client / Business Name</label>
+                <label className={styles.label}>Client / Business Name</label>
                 <input
                   type="text"
                   className="input-field"
@@ -668,36 +683,37 @@ export default function Dashboard() {
 
               <div style={{ marginTop: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <label className={styles.label} style={{ fontSize: '14px', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
-                    <AlertCircle size={15} /> Add this exact email as a 'Viewer' in GA4:
-                  </label>
+                  <div>
+                    <label className={styles.label} style={{ margin: 0 }}>Add this email as a viewer in GA4</label>
+                    <p style={{ fontSize: '12px', color: 'var(--muted)', margin: '2px 0 0' }}>Required to read your analytics data</p>
+                  </div>
                   <button 
                     type="button" 
                     onClick={() => setShowPermissionVideo(!showPermissionVideo)}
-                    style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '13px', cursor: 'pointer', fontWeight: 'bold' }}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '12px', cursor: 'pointer', fontWeight: '500', flexShrink: 0 }}
                   >
                     {showPermissionVideo ? 'Hide Demo' : '▶ Watch Demo'}
                   </button>
                 </div>
 
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <code style={{ fontSize: '13px', background: 'var(--background)', padding: '10px', borderRadius: '6px', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                  <code style={{ fontSize: '12px', fontFamily: 'monospace', background: '#F9F8FF', padding: '10px 12px', borderRadius: '8px', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', border: '1.5px solid var(--border)', color: 'var(--foreground)' }}>
                     {serviceAccountEmail}
                   </code>
                   <button 
                     type="button"
                     onClick={() => { navigator.clipboard.writeText(serviceAccountEmail); toast.success('Email Copied! Proceed to GA4 Dashboard.'); }}
-                    style={{ background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '6px', padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    style={{ background: 'transparent', color: 'var(--primary)', border: '1.5px solid var(--border)', borderRadius: '8px', padding: '0', width: '38px', height: '38px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                     title="Copy to Clipboard"
                   >
-                    <Copy size={16} />
+                    <Copy size={15} />
                   </button>
                 </div>
                 {showPermissionVideo && <div style={{ marginTop: '10px' }}><HelpVideo src="/give viewer permission.mp4" /></div>}
               </div>
 
               <div>
-                <label className={styles.label} style={{ fontSize: '15px' }}>GA4 Property ID</label>
+                <label className={styles.label}>GA4 Property ID</label>
                 <input
                   type="text"
                   className="input-field"
@@ -718,10 +734,10 @@ export default function Dashboard() {
                 </div>
                 {showPropertyIdVideo && <div style={{ marginTop: '8px' }}><HelpVideo src="/Get Property ID.mp4" /></div>}
 
-                {/* Restorable ID List (Identity Lock Transparency) */}
+                {/* Previously added clients — only shown if deleted slots exist */}
                 {usedSlotsList.length > 0 && (
-                  <div style={{ marginTop: '12px', background: 'var(--secondary)', padding: '10px', borderRadius: '8px', fontSize: '11px' }}>
-                    <p style={{ fontWeight: '600', marginBottom: '8px', color: 'var(--muted)' }}>Restorable IDs (Click to pre-fill):</p>
+                  <div style={{ marginTop: '12px', background: 'var(--secondary)', padding: '12px', borderRadius: '10px' }}>
+                    <p style={{ fontSize: '12px', fontWeight: '500', marginBottom: '8px', color: 'var(--muted)' }}>Previously added clients</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                       {usedSlotsList.map(item => (
                         <button
@@ -732,16 +748,19 @@ export default function Dashboard() {
                             setNewClientProp(item.id);
                           }}
                           style={{
-                            background: 'var(--background)',
-                            padding: '6px 12px',
+                            background: 'var(--card-bg)',
+                            padding: '5px 12px',
                             borderRadius: '6px',
                             border: '1px solid var(--border)',
-                            color: 'var(--primary)',
+                            color: 'var(--foreground)',
                             cursor: 'pointer',
-                            fontSize: '13px',
-                            fontWeight: '500'
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            transition: 'background 0.15s ease'
                           }}
                           title={`Restore ${item.name}`}
+                          onMouseEnter={e => (e.currentTarget.style.background = '#F5F3FF')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'var(--card-bg)')}
                         >
                           {item.name}
                         </button>
@@ -751,8 +770,8 @@ export default function Dashboard() {
                 )}
 
               </div>
-              <button type="submit" className="btn-primary" style={{ marginTop: '8px', width: '100%' }}>
-                Save Client
+              <button type="submit" className="btn-primary" style={{ marginTop: '8px', width: '100%', height: '44px', fontSize: '14px' }}>
+                Save client
               </button>
             </form>
           </div>
@@ -930,31 +949,25 @@ export default function Dashboard() {
           </div>
         ) : (
           clients.map(client => (
-            <div key={client.id} className={`card ${styles.clientCard}`}>
+            <div key={client.id} className={styles.clientCard}>
               <div className={styles.clientHeader}>
                 <div className={styles.clientAvatar}>
                   {client.name.charAt(0).toUpperCase()}
                 </div>
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <h2 className={styles.clientName}>{client.name}</h2>
-                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <span className={styles.status}>Active</span>
-                    {client.hasGeneratedReport && (
-                      <span style={{ fontSize: '10px', background: 'color-mix(in srgb, #16a34a 10%, transparent)', color: '#16a34a', padding: '2px 6px', borderRadius: '4px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                        <CheckCircle size={10} /> Saved Slot
-                      </span>
-                    )}
+                    <span style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>GA4 · {client.propertyId}</span>
                   </div>
                 </div>
               </div>
               <div className={styles.clientMeta}>
                 <div className={styles.metaRow}>
-                  <span className={styles.metaLabel}>GA4 Property</span>
-                  <code className={styles.metaValue}>{client.propertyId}</code>
-                </div>
-                <div className={styles.metaRow}>
-                  <span className={styles.metaLabel}>Last Report</span>
-                  <span className={styles.metaValue}>{client.lastReport}</span>
+                  <span className={styles.metaLabel}>Last report</span>
+                  <span className={styles.metaValue} style={{ fontFamily: 'inherit', background: 'transparent', padding: 0 }}>
+                    {client.lastReport === 'Never' ? 'No reports yet' : relativeTime(client.lastReport)}
+                  </span>
                 </div>
               </div>
               <div className={styles.cardActions}>
