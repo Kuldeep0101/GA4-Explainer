@@ -386,7 +386,7 @@ export default function Dashboard() {
       <main className={styles.main}>
         <header className={styles.header}>
           <div className={styles.headerLeft}>
-            <div className={styles.logo}><Zap size={20} /> GA4 Explainer</div>
+            <div className={styles.logo}><img src="/favicon.png" alt="Logo" style={{ width: '22px', height: '22px', marginRight: '8px', border: '1px solid var(--foreground)', borderRadius: '50%', padding: '2px', objectFit: 'contain' }} /> GA4 Explainer</div>
           </div>
         </header>
       </main>
@@ -403,7 +403,7 @@ export default function Dashboard() {
             {/* Left Column: Copy & Action */}
             <div className={styles.heroLeft}>
               <div className={styles.signInLogo}>
-                <img src="/favicon.png" alt="Logo" style={{ width: '20px', height: '20px', marginRight: '8px' }} />
+                <img src="/favicon.png" alt="Logo" style={{ width: '26px', height: '26px', marginRight: '10px', border: '1.5px solid var(--foreground)', borderRadius: '50%', padding: '3px', objectFit: 'contain' }} />
                 GA4 Explainer
               </div>
               <h1 className={styles.signInTitle}>
@@ -536,7 +536,7 @@ export default function Dashboard() {
       <main className={styles.main}>
         <header className={styles.header}>
           <div className={styles.headerLeft}>
-            <div className={styles.logo}><img src="/favicon.png" alt="Logo" style={{ width: '20px', height: '20px', marginRight: '8px' }} /> GA4 Explainer</div>
+            <div className={styles.logo}><img src="/favicon.png" alt="Logo" style={{ width: '22px', height: '22px', marginRight: '8px', border: '1px solid var(--foreground)', borderRadius: '50%', padding: '2px', objectFit: 'contain' }} /> GA4 Explainer</div>
             <div>
               <h1 className={styles.title}>Your Clients</h1>
               <p className={styles.subtitle}>Loading…</p>
@@ -553,7 +553,7 @@ export default function Dashboard() {
       <header className={styles.header}>
         <div className={styles.headerLeft}>
           <div className={styles.logo}>
-            <img src="/favicon.png" alt="Logo" style={{ width: '20px', height: '20px', marginRight: '8px' }} />
+            <img src="/favicon.png" alt="Logo" style={{ width: '22px', height: '22px', marginRight: '8px', border: '1px solid var(--foreground)', borderRadius: '50%', padding: '2px', objectFit: 'contain' }} />
             GA4 Explainer
           </div>
           <div>

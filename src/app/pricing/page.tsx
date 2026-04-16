@@ -49,7 +49,7 @@ export default function PricingPage() {
       <div className={styles.container}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
           <Link href="/" className={styles.logo}>
-            <Zap size={20} />
+            <img src="/favicon.png" alt="Logo" style={{ width: '22px', height: '22px', marginRight: '8px', border: '1px solid var(--foreground)', borderRadius: '50%', padding: '2px', objectFit: 'contain' }} />
             GA4 Explainer
           </Link>
         </div>
