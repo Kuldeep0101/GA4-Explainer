@@ -28,19 +28,18 @@ export default function DemoPage({
   const [showControls, setShowControls] = useState(true);
   const hideTimer = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    v.play().then(() => setPlaying(true)).catch(() => {});
-  }, []);
-
   const resetHideTimer = () => {
     setShowControls(true);
     if (hideTimer.current) clearTimeout(hideTimer.current);
     hideTimer.current = setTimeout(() => {
-      if (videoRef.current && !videoRef.current.paused) setShowControls(false);
-    }, 3000);
+      setShowControls(false);
+    }, 1000);
   };
+
+  useEffect(() => {
+    resetHideTimer();
+  }, []);
+
 
   const togglePlay = () => {
     const v = videoRef.current;
