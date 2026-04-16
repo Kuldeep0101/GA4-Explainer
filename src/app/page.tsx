@@ -403,7 +403,7 @@ export default function Dashboard() {
             {/* Left Column: Copy & Action */}
             <div className={styles.heroLeft}>
               <div className={styles.signInLogo}>
-                <Zap size={20} />
+                <img src="/favicon.png" alt="Logo" style={{ width: '20px', height: '20px', marginRight: '8px' }} />
                 GA4 Explainer
               </div>
               <h1 className={styles.signInTitle}>
@@ -536,7 +536,7 @@ export default function Dashboard() {
       <main className={styles.main}>
         <header className={styles.header}>
           <div className={styles.headerLeft}>
-            <div className={styles.logo}><Zap size={20} /> GA4 Explainer</div>
+            <div className={styles.logo}><img src="/favicon.png" alt="Logo" style={{ width: '20px', height: '20px', marginRight: '8px' }} /> GA4 Explainer</div>
             <div>
               <h1 className={styles.title}>Your Clients</h1>
               <p className={styles.subtitle}>Loading…</p>
@@ -553,7 +553,7 @@ export default function Dashboard() {
       <header className={styles.header}>
         <div className={styles.headerLeft}>
           <div className={styles.logo}>
-            <Zap size={20} />
+            <img src="/favicon.png" alt="Logo" style={{ width: '20px', height: '20px', marginRight: '8px' }} />
             GA4 Explainer
           </div>
           <div>
@@ -697,7 +697,7 @@ export default function Dashboard() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <code style={{ fontSize: '12px', fontFamily: 'monospace', background: '#F9F8FF', padding: '10px 12px', borderRadius: '8px', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', border: '1.5px solid var(--border)', color: 'var(--foreground)' }}>
+                  <code style={{ fontSize: '12px', fontFamily: 'monospace', background: 'var(--secondary)', padding: '10px 12px', borderRadius: '8px', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', border: '1.5px solid var(--border)', color: 'var(--foreground)' }}>
                     {serviceAccountEmail}
                   </code>
                   <button 
