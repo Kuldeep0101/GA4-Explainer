@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Plus, FileText, X, Users, TrendingUp, Zap, LogOut, LogIn, CheckCircle, Clock, Copy, AlertCircle } from 'lucide-react';
+import { Plus, FileText, X, Users, TrendingUp, Zap, LogOut, LogIn, CheckCircle, Clock, Copy, AlertCircle, RefreshCw, Smartphone } from 'lucide-react';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { useTheme } from 'next-themes';
 import { supabase } from '@/lib/supabase';
@@ -1082,7 +1082,7 @@ export default function Dashboard() {
                     <span className={styles.metaValue}>{client.last_report}</span>
                   </div>
                 </div>
-                <div className={styles.cardActions}>
+                <div className={styles.cardActions} style={{ display: 'flex', gap: '8px' }}>
                   <Link
                     href={`/client/${encodeURIComponent(client.property_id)}/report?name=${encodeURIComponent(client.name)}&clientId=${client.id}`}
                     className="btn-secondary"
@@ -1090,6 +1090,19 @@ export default function Dashboard() {
                   >
                     <FileText size={16} /> View Archived Report
                   </Link>
+                  <button
+                    className="btn-secondary"
+                    onClick={() => {
+                      setNewClientName(client.name);
+                      setNewClientProp(client.property_id);
+                      setIsModalOpen(true);
+                      setActiveStep(3);
+                    }}
+                    style={{ width: '40px', padding: 0 }}
+                    title="Restore to active dashboard"
+                  >
+                    <RefreshCw size={16} />
+                  </button>
                 </div>
               </div>
             ))}
