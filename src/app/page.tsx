@@ -689,10 +689,10 @@ export default function Dashboard() {
                   </div>
                   <button 
                     type="button" 
-                    onClick={() => setShowPermissionVideo(!showPermissionVideo)}
+                    onClick={() => window.open('/demo/viewer-permission', '_blank', 'noopener')}
                     style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '12px', cursor: 'pointer', fontWeight: '500', flexShrink: 0 }}
                   >
-                    {showPermissionVideo ? 'Hide Demo' : '▶ Watch Demo'}
+                    ▶ Watch Demo
                   </button>
                 </div>
 
@@ -726,10 +726,10 @@ export default function Dashboard() {
                 <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '10px' }}>
                   <button 
                     type="button" 
-                    onClick={() => setShowPropertyIdVideo(!showPropertyIdVideo)}
-                    style={{ background: 'transparent', border: 'none', color: 'var(--primary)', textDecoration: 'underline', fontSize: '13px', cursor: 'pointer', fontWeight: 'bold' }}
+                    onClick={() => window.open('/demo/property-id', '_blank', 'noopener')}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--primary)', textDecoration: 'underline', fontSize: '13px', cursor: 'pointer', fontWeight: '500' }}
                   >
-                    {showPropertyIdVideo ? 'Hide Video' : '▶ Where to find Property ID? (Demo)'}
+                    ▶ Where to find Property ID? (Demo)
                   </button>
                 </div>
                 {showPropertyIdVideo && <div style={{ marginTop: '8px' }}><HelpVideo src="/Get Property ID.mp4" /></div>}
