@@ -61,6 +61,7 @@ export default function Dashboard() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showPermissionVideo, setShowPermissionVideo] = useState(false);
   const [showPropertyIdVideo, setShowPropertyIdVideo] = useState(false);
+  const [activeStep, setActiveStep] = useState(1);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -660,136 +661,174 @@ export default function Dashboard() {
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <div>
-                <h2 style={{ fontSize: '18px', fontWeight: 600, margin: 0 }}>Add a client</h2>
-                <p style={{ fontSize: '13px', color: 'var(--muted)', margin: '4px 0 0' }}>Connect a GA4 property to generate reports</p>
+                <h2 style={{ fontSize: '18px', fontWeight: 600, margin: 0 }}>
+                  {activeStep === 1 ? 'Step 1: Client Name' : activeStep === 2 ? 'Step 2: GA4 Permission' : 'Step 3: Property ID'}
+                </h2>
+                <div style={{ display: 'flex', gap: '4px', marginTop: '6px' }}>
+                  <div style={{ height: '4px', width: '24px', borderRadius: '2px', background: activeStep >= 1 ? 'var(--primary)' : 'var(--border)' }} />
+                  <div style={{ height: '4px', width: '24px', borderRadius: '2px', background: activeStep >= 2 ? 'var(--primary)' : 'var(--border)' }} />
+                  <div style={{ height: '4px', width: '24px', borderRadius: '2px', background: activeStep >= 3 ? 'var(--primary)' : 'var(--border)' }} />
+                </div>
               </div>
-              <button className={styles.closeBtn} onClick={() => setIsModalOpen(false)}>
+              <button className={styles.closeBtn} onClick={() => { setIsModalOpen(false); setActiveStep(1); }}>
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleAddClient} className={styles.modalBody}>
-              <div>
-                <label className={styles.label}>Client / Business Name</label>
-                <input
-                  type="text"
-                  className="input-field"
-                  value={newClientName}
-                  onChange={e => setNewClientName(e.target.value)}
-                  placeholder="e.g. Acme Corp"
-                  autoFocus
-                  required
-                />
-              </div>
-
-              <div style={{ marginTop: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '8px' }}>
+            <div className={styles.modalBody}>
+              {activeStep === 1 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   <div>
-                    <label className={styles.label} style={{ margin: 0 }}>Step 1: Add viewer email in GA4</label>
-                    <p style={{ fontSize: '12px', color: 'var(--muted)', margin: '2px 0 0' }}>Required to read your analytics data</p>
+                    <label className={styles.label}>What is your client&apos;s business name?</label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      value={newClientName}
+                      onChange={e => setNewClientName(e.target.value)}
+                      placeholder="e.g. Acme Corp"
+                      autoFocus
+                    />
                   </div>
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <button 
-                      type="button" 
-                      onClick={() => window.open('/demo/viewer-permission', '_blank', 'noopener')}
-                      style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}
-                    >
-                      ▶ Watch Demo
-                    </button>
-                    <button 
-                      type="button" 
-                      onClick={() => window.open('https://www.notion.so/Steps-to-Grant-Viewer-Access-3445ba8e715f80df9c54c3f574ac172f?source=copy_link', '_blank', 'noopener')}
-                      style={{ background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: '11px', cursor: 'pointer', fontWeight: '500', textDecoration: 'underline' }}
-                    >
-                      Read Doc
-                    </button>
-                  </div>
-                </div>
 
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <code style={{ fontSize: '12px', fontFamily: 'monospace', background: 'var(--secondary)', padding: '10px 12px', borderRadius: '8px', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', border: '1.5px solid var(--border)', color: 'var(--foreground)' }}>
-                    {serviceAccountEmail}
-                  </code>
+                  {usedSlotsList.length > 0 && (
+                    <div style={{ background: 'var(--secondary)', padding: '12px', borderRadius: '10px' }}>
+                      <p style={{ fontSize: '12px', fontWeight: '500', marginBottom: '8px', color: 'var(--muted)' }}>Quick restore from previously added:</p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        {usedSlotsList.map(item => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => {
+                              setNewClientName(item.name);
+                              setNewClientProp(item.id);
+                              setActiveStep(3);
+                            }}
+                            className={styles.restoreBtn}
+                            style={{
+                              background: 'var(--card-bg)',
+                              padding: '5px 12px',
+                              borderRadius: '6px',
+                              border: '1px solid var(--border)',
+                              color: 'var(--foreground)',
+                              cursor: 'pointer',
+                              fontSize: '11px',
+                              fontWeight: '500'
+                            }}
+                          >
+                            {item.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <button 
-                    type="button"
-                    onClick={() => { navigator.clipboard.writeText(serviceAccountEmail); toast.success('Email Copied! Proceed to GA4 Dashboard.'); }}
-                    style={{ background: 'transparent', color: 'var(--primary)', border: '1.5px solid var(--border)', borderRadius: '8px', padding: '0', width: '38px', height: '38px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-                    title="Copy to Clipboard"
+                    className="btn-primary" 
+                    style={{ width: '100%', height: '44px' }}
+                    disabled={!newClientName}
+                    onClick={() => setActiveStep(2)}
                   >
-                    <Copy size={15} />
+                    Continue to Permissions
                   </button>
                 </div>
-              </div>
+              )}
 
-              <div style={{ marginTop: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <label className={styles.label} style={{ margin: 0 }}>Step 2: Enter GA4 Property ID</label>
+              {activeStep === 2 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <label className={styles.label} style={{ margin: 0 }}>Add this email as a &apos;Viewer&apos; in GA4</label>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button 
+                          type="button" 
+                          onClick={() => window.open('/demo/viewer-permission', '_blank', 'noopener')}
+                          style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}
+                        >
+                          ▶ Watch Demo
+                        </button>
+                        <button 
+                          type="button" 
+                          onClick={() => window.open('https://www.notion.so/Steps-to-Grant-Viewer-Access-3445ba8e715f80df9c54c3f574ac172f?source=copy_link', '_blank', 'noopener')}
+                          style={{ background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: '11px', cursor: 'pointer', fontWeight: '500', textDecoration: 'underline' }}
+                        >
+                          Read Doc
+                        </button>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <code style={{ fontSize: '12px', fontFamily: 'monospace', background: 'var(--secondary)', padding: '12px', borderRadius: '8px', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', border: '1.5px solid var(--border)' }}>
+                        {serviceAccountEmail}
+                      </code>
+                      <button 
+                        type="button"
+                        onClick={() => { navigator.clipboard.writeText(serviceAccountEmail); toast.success('Email Copied!'); }}
+                        style={{ background: 'transparent', color: 'var(--primary)', border: '1.5px solid var(--border)', borderRadius: '8px', width: '38px', height: '38px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >
+                        <Copy size={15} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ background: '#F5F3FF', padding: '16px', borderRadius: '12px', border: '1px solid #7C3AED20' }}>
+                    <p style={{ fontSize: '13px', color: '#5B21B6', margin: 0, fontWeight: 500, lineHeight: 1.5 }}>
+                      Without this step, our AI cannot read your analytics data to generate the report. It takes less than 30 seconds.
+                    </p>
+                  </div>
+
                   <div style={{ display: 'flex', gap: '10px' }}>
+                    <button className="btn-secondary" style={{ flex: 1 }} onClick={() => setActiveStep(1)}>Back</button>
                     <button 
-                      type="button" 
-                      onClick={() => window.open('/demo/property-id', '_blank', 'noopener')}
-                      style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}
+                      className="btn-primary" 
+                      style={{ flex: 2, height: '44px' }}
+                      onClick={() => setActiveStep(3)}
                     >
-                      ▶ Watch Demo
-                    </button>
-                    <button 
-                      type="button" 
-                      onClick={() => window.open('https://www.notion.so/Retrieving_Google_Analytics_Property_ID-3445ba8e715f80b48eb2c13d7942bd01?source=copy_link', '_blank', 'noopener')}
-                      style={{ background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: '11px', cursor: 'pointer', fontWeight: '500', textDecoration: 'underline' }}
-                    >
-                      Read Doc
+                      I&apos;ve given permission
                     </button>
                   </div>
                 </div>
-                <input
-                  type="text"
-                  className="input-field"
-                  value={newClientProp}
-                  onChange={e => setNewClientProp(e.target.value)}
-                  placeholder="e.g. 123456789 (numeric ID only)"
-                  required
-                />
-              </div>
+              )}
 
-                {/* Previously added clients — only shown if deleted slots exist */}
-                {usedSlotsList.length > 0 && (
-                  <div style={{ marginTop: '12px', background: 'var(--secondary)', padding: '12px', borderRadius: '10px' }}>
-                    <p style={{ fontSize: '12px', fontWeight: '500', marginBottom: '8px', color: 'var(--muted)' }}>Previously added clients</p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                      {usedSlotsList.map(item => (
-                        <button
-                          key={item.id}
-                          type="button"
-                          onClick={() => {
-                            setNewClientName(item.name);
-                            setNewClientProp(item.id);
-                          }}
-                          style={{
-                            background: 'var(--card-bg)',
-                            padding: '5px 12px',
-                            borderRadius: '6px',
-                            border: '1px solid var(--border)',
-                            color: 'var(--foreground)',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                            fontWeight: '500',
-                            transition: 'background 0.15s ease'
-                          }}
-                          title={`Restore ${item.name}`}
-                          onMouseEnter={e => (e.currentTarget.style.background = '#F5F3FF')}
-                          onMouseLeave={e => (e.currentTarget.style.background = 'var(--card-bg)')}
+              {activeStep === 3 && (
+                <form onSubmit={async (e) => { e.preventDefault(); await handleAddClient(e); setActiveStep(1); }} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <label className={styles.label} style={{ margin: 0 }}>Enter GA4 Property ID</label>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button 
+                          type="button" 
+                          onClick={() => window.open('/demo/property-id', '_blank', 'noopener')}
+                          style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}
                         >
-                          {item.name}
+                          ▶ Watch Demo
                         </button>
-                      ))}
+                        <button 
+                          type="button" 
+                          onClick={() => window.open('https://www.notion.so/Retrieving_Google_Analytics_Property_ID-3445ba8e715f80b48eb2c13d7942bd01?source=copy_link', '_blank', 'noopener')}
+                          style={{ background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: '11px', cursor: 'pointer', fontWeight: '500', textDecoration: 'underline' }}
+                        >
+                          Read Doc
+                        </button>
+                      </div>
                     </div>
+                    <input
+                      type="text"
+                      className="input-field"
+                      value={newClientProp}
+                      onChange={e => setNewClientProp(e.target.value)}
+                      placeholder="e.g. 123456789"
+                      required
+                    />
                   </div>
-                )}
 
-
-              <button type="submit" className="btn-primary" style={{ marginTop: '8px', width: '100%', height: '44px', fontSize: '14px' }}>
-                Save client
-              </button>
-            </form>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button type="button" className="btn-secondary" style={{ flex: 1 }} onClick={() => setActiveStep(2)}>Back</button>
+                    <button type="submit" className="btn-primary" style={{ flex: 2, height: '44px' }} disabled={isAdding}>
+                      {isAdding ? 'Connecting...' : 'Finish & Connect Client'}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
           </div>
         </div>
       )}
