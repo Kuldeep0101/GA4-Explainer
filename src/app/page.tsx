@@ -681,19 +681,28 @@ export default function Dashboard() {
                 />
               </div>
 
-              <div style={{ marginTop: '8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <div style={{ marginTop: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '8px' }}>
                   <div>
-                    <label className={styles.label} style={{ margin: 0 }}>Add this email as a viewer in GA4</label>
+                    <label className={styles.label} style={{ margin: 0 }}>Step 1: Add viewer email in GA4</label>
                     <p style={{ fontSize: '12px', color: 'var(--muted)', margin: '2px 0 0' }}>Required to read your analytics data</p>
                   </div>
-                  <button 
-                    type="button" 
-                    onClick={() => window.open('/demo/viewer-permission', '_blank', 'noopener')}
-                    style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '12px', cursor: 'pointer', fontWeight: '500', flexShrink: 0 }}
-                  >
-                    ▶ Watch Demo
-                  </button>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button 
+                      type="button" 
+                      onClick={() => window.open('/demo/viewer-permission', '_blank', 'noopener')}
+                      style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}
+                    >
+                      ▶ Watch Demo
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => window.open('https://www.notion.so/Steps-to-Grant-Viewer-Access-3445ba8e715f80df9c54c3f574ac172f?source=copy_link', '_blank', 'noopener')}
+                      style={{ background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: '11px', cursor: 'pointer', fontWeight: '500', textDecoration: 'underline' }}
+                    >
+                      Read Doc
+                    </button>
+                  </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -709,11 +718,28 @@ export default function Dashboard() {
                     <Copy size={15} />
                   </button>
                 </div>
-                {showPermissionVideo && <div style={{ marginTop: '10px' }}><HelpVideo src="/give viewer permission.mp4" /></div>}
               </div>
 
-              <div>
-                <label className={styles.label}>GA4 Property ID</label>
+              <div style={{ marginTop: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label className={styles.label} style={{ margin: 0 }}>Step 2: Enter GA4 Property ID</label>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button 
+                      type="button" 
+                      onClick={() => window.open('/demo/property-id', '_blank', 'noopener')}
+                      style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}
+                    >
+                      ▶ Watch Demo
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => window.open('https://www.notion.so/Retrieving_Google_Analytics_Property_ID-3445ba8e715f80b48eb2c13d7942bd01?source=copy_link', '_blank', 'noopener')}
+                      style={{ background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: '11px', cursor: 'pointer', fontWeight: '500', textDecoration: 'underline' }}
+                    >
+                      Read Doc
+                    </button>
+                  </div>
+                </div>
                 <input
                   type="text"
                   className="input-field"
@@ -722,17 +748,7 @@ export default function Dashboard() {
                   placeholder="e.g. 123456789 (numeric ID only)"
                   required
                 />
-
-                <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '10px' }}>
-                  <button 
-                    type="button" 
-                    onClick={() => window.open('/demo/property-id', '_blank', 'noopener')}
-                    style={{ background: 'transparent', border: 'none', color: 'var(--primary)', textDecoration: 'underline', fontSize: '13px', cursor: 'pointer', fontWeight: '500' }}
-                  >
-                    ▶ Where to find Property ID? (Demo)
-                  </button>
-                </div>
-                {showPropertyIdVideo && <div style={{ marginTop: '8px' }}><HelpVideo src="/Get Property ID.mp4" /></div>}
+              </div>
 
                 {/* Previously added clients — only shown if deleted slots exist */}
                 {usedSlotsList.length > 0 && (
@@ -769,7 +785,7 @@ export default function Dashboard() {
                   </div>
                 )}
 
-              </div>
+
               <button type="submit" className="btn-primary" style={{ marginTop: '8px', width: '100%', height: '44px', fontSize: '14px' }}>
                 Save client
               </button>
