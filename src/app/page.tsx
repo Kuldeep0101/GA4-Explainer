@@ -820,6 +820,12 @@ export default function Dashboard() {
                     />
                   </div>
 
+                  <div style={{ background: '#F5F3FF', padding: '16px', borderRadius: '12px', border: '1px solid #7C3AED20' }}>
+                    <p style={{ fontSize: '13px', color: '#5B21B6', margin: 0, fontWeight: 500, lineHeight: 1.5 }}>
+                      The Property ID is a unique numeric identifier for your client&apos;s GA4 account. Without it, we cannot fetch the data required to build your report.
+                    </p>
+                  </div>
+
                   <div style={{ display: 'flex', gap: '10px' }}>
                     <button type="button" className="btn-secondary" style={{ flex: 1 }} onClick={() => setActiveStep(2)}>Back</button>
                     <button type="submit" className="btn-primary" style={{ flex: 2, height: '44px' }} disabled={isAdding}>
