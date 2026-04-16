@@ -693,7 +693,7 @@ export default function Dashboard() {
                     <Copy size={16} />
                   </button>
                 </div>
-                {showPermissionVideo && <div style={{ marginTop: '10px' }}><HelpVideo src="/how-to-grant-viewer.mp4" /></div>}
+                {showPermissionVideo && <div style={{ marginTop: '10px' }}><HelpVideo src="/give viewer permission.mp4" /></div>}
               </div>
 
               <div>
@@ -716,7 +716,7 @@ export default function Dashboard() {
                     {showPropertyIdVideo ? 'Hide Video' : '▶ Where to find Property ID? (Demo)'}
                   </button>
                 </div>
-                {showPropertyIdVideo && <div style={{ marginTop: '8px' }}><HelpVideo src="/how-to-find-property-id.mp4" /></div>}
+                {showPropertyIdVideo && <div style={{ marginTop: '8px' }}><HelpVideo src="/Get Property ID.mp4" /></div>}
 
                 {/* Restorable ID List (Identity Lock Transparency) */}
                 {usedSlotsList.length > 0 && (
